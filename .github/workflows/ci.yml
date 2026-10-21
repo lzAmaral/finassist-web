@@ -3,11 +3,19 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, feat/openfinance]
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -28,6 +36,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
       - name: Formatação
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - name: Migrations
@@ -41,6 +50,7 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend

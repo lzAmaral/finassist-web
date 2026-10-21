@@ -1,15 +1,17 @@
 name: SvelteKit Web
 on:
   push:
-    branches: [main]
-    paths: ['web/**', '.github/workflows/web.yml']
+    branches: [dev, main]
   pull_request:
-    paths: ['web/**', '.github/workflows/web.yml']
 permissions:
   contents: read
+concurrency:
+  group: web-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web

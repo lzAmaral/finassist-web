@@ -1,5 +1,7 @@
 # FinAssist — seu assistente financeiro pessoal
 
+**Desenvolvimento e deploy:** trabalhamos em `dev`, promovemos por PR para `main` e a Vercel publica a produção automaticamente. Veja [CI/CD](docs/ci-cd.md).
+
 > **FinAssist Web, por Luiz Amaral:** evolução independente do [projeto original de Marcos Antônio Albano Júnior](https://github.com/MarcosAAlbanoJunior/go-financial-assistant), preservando a licença MIT e os créditos. O plano para o novo frontend SvelteKit e implantação está em [docs/plano-web.md](docs/plano-web.md). As instruções abaixo descrevem a aplicação original, que continua disponível.
 
 **Novo frontend:** [abrir painel na Vercel](https://finassist-web.vercel.app) · [configurar e executar](web/README.md). Feito em SvelteKit, com dashboard, busca e exportação de transações. Oferece consulta Pluggy com armazenamento privado criptografado e login, ou conexão à API Go para os recursos completos da instalação. Sem configuração, o painel permanece vazio.

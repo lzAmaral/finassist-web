@@ -1,0 +1,25 @@
+name: Release policy
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  release-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Exigir promoção de dev para main
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [[ "$HEAD_BRANCH" != "dev" || "$HEAD_REPO" != "$BASE_REPO" ]]; then
+            echo "::error::Produção aceita apenas PR da branch dev deste repositório para main."
+            exit 1
+          fi

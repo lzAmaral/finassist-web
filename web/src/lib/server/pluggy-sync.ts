@@ -1,6 +1,12 @@
 import { cloudConfig } from './cloud-config.js';
 import { readSnapshot, writeSnapshot } from './cloud-store.js';
 import type { Account, Movement, Snapshot } from './finance-data.js';
+import {
+  ownTransfer,
+  completeDocument,
+  normalizedName,
+  type TransferMetadata
+} from './own-transfer.js';
 
 let pending: Promise<Snapshot> | undefined;
 async function synchronize(): Promise<Snapshot> {
@@ -45,17 +51,24 @@ async function synchronize(): Promise<Snapshot> {
       return { id, status: item.status, updatedAt: item.lastUpdatedAt ?? null };
     })
   );
+  const ownerDocuments = new Set<string>();
+  const ownerNames = new Set<string>();
   const accounts = (
     await Promise.all(
       c.itemIds.map(async (itemId) => {
         const all: Account[] = [];
         for (let page = 1; page <= 100; page++) {
-          const data = await get<{ results: Account[]; totalPages: number }>(
-            `/accounts?itemId=${encodeURIComponent(itemId)}&page=${page}`
-          );
+          const data = await get<{
+            results: (Account & { owner?: string; taxNumber?: string })[];
+            totalPages: number;
+          }>(`/accounts?itemId=${encodeURIComponent(itemId)}&page=${page}`);
           for (const a of data.results) {
             if (!a.id || !Number.isFinite(a.balance))
               throw new Error('Conta inválida recebida da Pluggy.');
+            const document = completeDocument(a.taxNumber ?? '');
+            if (document) ownerDocuments.add(document);
+            const owner = normalizedName(a.owner ?? '');
+            if (owner.split(' ').length >= 3) ownerNames.add(owner);
             // Deliberately omit CPF, account numbers, owner and identity data.
             all.push({
               id: a.id,
@@ -86,9 +99,10 @@ async function synchronize(): Promise<Snapshot> {
           if (visited.has(path))
             throw new Error('Cursor de movimentações repetido.');
           visited.add(path);
-          const data = await get<{ results: Movement[]; next: string | null }>(
-            path
-          );
+          const data = await get<{
+            results: (Movement & TransferMetadata)[];
+            next: string | null;
+          }>(path);
           for (const t of data.results)
             all.push({
               id: t.id,
@@ -103,6 +117,7 @@ async function synchronize(): Promise<Snapshot> {
               currencyCode: t.currencyCode,
               amountInAccountCurrency: t.amountInAccountCurrency,
               providerId: t.providerId,
+              ownTransfer: ownTransfer(t, ownerDocuments, ownerNames),
               paymentData: t.paymentData
                 ? { paymentMethod: t.paymentData.paymentMethod }
                 : undefined,

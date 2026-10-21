@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ownTransfer,
+  completeDocument
+} from '../src/lib/server/own-transfer.ts';
+import {
   dashboardFromSnapshot,
   movement
 } from '../src/lib/server/finance-data.ts';
@@ -141,4 +145,52 @@ test('currency amounts are not combined into a misleading BRL balance', () => {
 });
 test('invalid movement direction is rejected instead of fabricated as an expense', () => {
   assert.throws(() => movement(tx({ type: 'UNKNOWN' }), bank));
+});
+
+test('generic transfer categories use counterparty identity, never amount/date matching', () => {
+  const documents = new Set(['11111111111']);
+  const names = new Set(['pessoa teste proprietaria']);
+  const debit = {
+    type: 'DEBIT',
+    category: 'Transfer - Internal',
+    paymentData: { receiver: { documentNumber: { value: '111.111.111-11' } } }
+  };
+  assert.equal(ownTransfer(debit, documents, names), true);
+  assert.equal(
+    ownTransfer(
+      { ...debit, paymentData: { payer: debit.paymentData.receiver } },
+      documents,
+      names
+    ),
+    false
+  );
+  assert.equal(
+    ownTransfer(
+      {
+        ...debit,
+        paymentData: { receiver: { name: 'Pessoa Teste Proprietária' } }
+      },
+      documents,
+      names
+    ),
+    true
+  );
+  assert.equal(
+    ownTransfer(
+      {
+        ...debit,
+        paymentData: {
+          receiver: {
+            name: 'Pessoa Teste Proprietária',
+            documentNumber: { value: '22222222222' }
+          }
+        }
+      },
+      documents,
+      names
+    ),
+    false
+  );
+  assert.equal(completeDocument('***.111.111-**'), '');
+  assert.equal(movement(tx({ ownTransfer: true }), bank).kind, 'TRANSFER');
 });

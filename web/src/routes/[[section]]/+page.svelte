@@ -174,7 +174,7 @@
         <span class="status-pill"
           ><span></span>{d.mode === 'unconfigured'
             ? 'Aguardando conexão'
-            : 'Conectado à sua API'}</span
+            : 'Contas conectadas'}</span
         ><span class="avatar small"
           >{d.mode === 'unconfigured' ? 'F' : 'L'}</span
         >

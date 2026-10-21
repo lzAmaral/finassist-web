@@ -22,6 +22,7 @@ export interface Movement {
   currencyCode: string;
   amountInAccountCurrency?: number;
   providerId?: string;
+  ownTransfer?: boolean;
   paymentData?: { paymentMethod?: string };
   creditCardMetadata?: {
     installmentNumber?: number;
@@ -94,6 +95,7 @@ export function movement(t: Movement, account: Account): Transaction | null {
       full
     );
   const transfer =
+    t.ownTransfer === true ||
     /same person transfer|investment|fixed income|variable income|mutual fund/.test(
       category
     ) ||
@@ -103,6 +105,11 @@ export function movement(t: Movement, account: Account): Transaction | null {
   const [, key, label] = categories.find(([pattern]) =>
     pattern.test(category)
   ) ?? [null, 'OTHER', t.category || 'Sem categoria'];
+  const translatedLabel = /transfer/i.test(label)
+    ? 'Transferências'
+    : /entrepreneurial/i.test(label)
+      ? 'Atividades profissionais'
+      : label;
   let date = t.date.slice(0, 10);
   const meta = t.creditCardMetadata;
   let text = description;
@@ -130,7 +137,11 @@ export function movement(t: Movement, account: Account): Transaction | null {
     date,
     description: text,
     category: transfer ? 'TRANSFER' : key,
-    categoryLabel: transfer ? 'Transferência' : label,
+    categoryLabel: transfer
+      ? 'Transferência'
+      : inflow && /interest|investment earnings/.test(category)
+        ? 'Rendimentos'
+        : translatedLabel,
     paymentMethodLabel: card
       ? 'Cartão de crédito'
       : t.paymentData?.paymentMethod || 'Conta bancária',

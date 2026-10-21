@@ -60,7 +60,11 @@ export async function cloudAPI(event: RequestEvent) {
         transactions: snapshot.transactions.length,
         syncedAt: snapshot.syncedAt
       });
-    } catch {
+    } catch (error) {
+      console.error(
+        'finassist_sync_failed',
+        error instanceof Error ? error.name : 'UnknownError'
+      );
       return reply(
         {
           error:

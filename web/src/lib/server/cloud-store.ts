@@ -11,7 +11,10 @@ export async function readSnapshot(fresh = false) {
   const result = await get(path, {
     access: 'private',
     token: c.blobToken,
-    useCache: false
+    useCache: false,
+    // Compression replaces the storage ETag with a weak validator. Request the
+    // identity representation so the next conditional write uses its strong ETag.
+    headers: { 'accept-encoding': 'identity' }
   });
   if (!result) return undefined;
   if (result.statusCode !== 200)

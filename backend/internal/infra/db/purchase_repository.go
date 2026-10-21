@@ -88,6 +88,9 @@ func (r *LedgerRepo) Save(ctx context.Context, purchase *domain.Purchase, paymen
 		); err != nil {
 			return fmt.Errorf("erro ao salvar pagamento: %w", err)
 		}
+		if err := applyExactPaymentCategory(ctx, tx, purchase.ID, p.ID); err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit(ctx)
@@ -166,12 +169,17 @@ func (r *LedgerRepo) FindTransferNetByMonth(ctx context.Context, month time.Time
 }
 
 func (r *LedgerRepo) SavePayment(ctx context.Context, payment *domain.Payment) error {
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 	query := `
 		INSERT INTO payments
 			(id, purchase_id, amount, status, installment_number, due_date, reference_month, paid_at, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
-	_, err := r.db.Pool.Exec(ctx, query,
+	_, err = tx.Exec(ctx, query,
 		payment.ID, payment.PurchaseID, payment.Amount, payment.Status,
 		payment.InstallmentNumber, payment.DueDate, payment.ReferenceMonth,
 		payment.PaidAt, payment.CreatedAt,
@@ -179,5 +187,8 @@ func (r *LedgerRepo) SavePayment(ctx context.Context, payment *domain.Payment) e
 	if err != nil {
 		return fmt.Errorf("erro ao salvar pagamento: %w", err)
 	}
-	return nil
+	if err := applyExactPaymentCategory(ctx, tx, payment.PurchaseID, payment.ID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }

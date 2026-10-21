@@ -1,22 +1,44 @@
 <script lang="ts">
+  import { page } from '$app/state';
+  import { goto, invalidateAll } from '$app/navigation';
   import type { Dashboard, Transaction } from '#lib/finance.js';
   import { money } from '#lib/finance.js';
   import {
     cashFlowTransactions,
     cashFlowSign,
+    transactionAccount,
+    transactionPage,
+    transactionURL,
+    transactionsCSV,
     type CashFlow
   } from '#lib/transactions.js';
+  import CategoryEditor from '#lib/components/CategoryEditor.svelte';
   import Icon from '#lib/Icon.svelte';
   import '#lib/transactions.css';
 
   let {
     dashboard: d,
     overview = false,
-    hidden = false
-  }: { dashboard: Dashboard; overview?: boolean; hidden?: boolean } = $props();
-  let search = $state('');
-  let category = $state('');
-  let flow = $state<CashFlow>('all');
+    hidden = false,
+    editableCategories = false
+  }: {
+    dashboard: Dashboard;
+    overview?: boolean;
+    hidden?: boolean;
+    editableCategories?: boolean;
+  } = $props();
+  // SvelteKit 3 keeps the loaded URL separate from shallow navigation.
+  let filterURL = $derived(page.shallow?.url ?? page.url);
+  let search = $derived(filterURL.searchParams.get('q') ?? '');
+  let category = $derived(filterURL.searchParams.get('category') ?? '');
+  let account = $derived(filterURL.searchParams.get('account') ?? '');
+  let flow = $derived<CashFlow>(
+    filterURL.searchParams.get('flow') === 'INCOME'
+      ? 'INCOME'
+      : filterURL.searchParams.get('flow') === 'EXPENSE'
+        ? 'EXPENSE'
+        : 'all'
+  );
   let cashFlow = $derived(cashFlowTransactions(d.transactions.items));
   let incoming = $derived(
     cashFlow.filter((transaction) => transaction.kind === 'INCOME')
@@ -25,8 +47,35 @@
     cashFlow.filter((transaction) => transaction.kind === 'EXPENSE')
   );
   let filtered = $derived(
-    cashFlowTransactions(d.transactions.items, { search, category, flow })
+    cashFlowTransactions(d.transactions.items, {
+      search,
+      category,
+      account,
+      flow
+    })
   );
+  let visible = $derived(
+    transactionPage(filtered, Number(filterURL.searchParams.get('page') ?? 1))
+  );
+  let accounts = $derived(
+    [
+      ...new Map(
+        cashFlow.map((transaction) => [
+          transactionAccount(transaction),
+          transaction.accountName || 'Manual'
+        ])
+      ).entries()
+    ].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+  );
+  const changeFilter = (key: string, value: string) =>
+    goto(transactionURL(filterURL, { [key]: value, page: '' }), {
+      state: page.state,
+      shallow: true,
+      replace: true,
+      reset: false
+    });
+  const pageURL = (number: number) =>
+    transactionURL(filterURL, { page: number });
   let categories = $derived(
     [...new Set(cashFlow.map((transaction) => transaction.categoryLabel))].sort(
       (a, b) => a.localeCompare(b, 'pt-BR')
@@ -41,24 +90,7 @@
   ] as const;
 
   function exportCSV() {
-    const cell = (value: unknown) =>
-      `"${String(value)
-        .replace(/^[=+@-]/, "'")
-        .replaceAll('"', '""')}"`;
-    const content =
-      '\uFEFF' +
-      [
-        ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'],
-        ...filtered.map((transaction) => [
-          transaction.date,
-          transaction.description,
-          transaction.categoryLabel,
-          transaction.kind,
-          transaction.amount.toFixed(2)
-        ])
-      ]
-        .map((row) => row.map(cell).join(';'))
-        .join('\r\n');
+    const content = transactionsCSV(filtered);
     const url = URL.createObjectURL(
       new Blob([content], { type: 'text/csv;charset=utf-8' })
     );
@@ -136,7 +168,8 @@
       >{:else}<button
         class="secondary-button"
         onclick={exportCSV}
-        disabled={!filtered.length}
+        disabled={!filtered.length ||
+          d.transactions.total !== d.transactions.items.length}
         ><Icon name="download" size={16} />Exportar CSV</button
       >{/if}
   </div>
@@ -152,7 +185,8 @@
       role="note"
     >
       Lista baseada nos {d.transactions.items.length} lançamentos mais recentes de
-      {d.transactions.total} disponíveis no período. Os totais consideram o mês completo.
+      {d.transactions.total} disponíveis no período. Recarregue para buscar e exportar
+      o mês completo. Os totais consideram o mês completo.
     </p>{/if}
 
   {#if overview}
@@ -204,7 +238,7 @@
               type="button"
               aria-pressed={flow === direction.value}
               onclick={() => {
-                flow = direction.value;
+                changeFilter('flow', direction.value);
               }}>{direction.label}</button
             >{/each}
         </div>
@@ -212,15 +246,27 @@
           <label class="search-field"
             ><Icon name="search" size={18} /><input
               aria-label="Buscar transações"
-              bind:value={search}
+              value={search}
+              oninput={(event) => changeFilter('q', event.currentTarget.value)}
               placeholder="Buscar descrição ou conta…"
             /></label
           ><select
             aria-label="Filtrar por categoria"
             class="field-select"
-            bind:value={category}
+            value={category}
+            onchange={(event) =>
+              changeFilter('category', event.currentTarget.value)}
             ><option value="">Todas as categorias</option
             >{#each categories as item}<option>{item}</option>{/each}</select
+          ><select
+            aria-label="Filtrar por conta"
+            class="field-select"
+            value={account}
+            onchange={(event) =>
+              changeFilter('account', event.currentTarget.value)}
+            ><option value="">Todas as contas</option
+            >{#each accounts as [id, name]}<option value={id}>{name}</option
+              >{/each}</select
           >
         </div>
         <p class="activity-result-count" aria-live="polite">
@@ -228,6 +274,39 @@
           {filtered.length === 1 ? 'resultado' : 'resultados'}
         </p>
       </div>
+      {#if visible.pages > 1}
+        <nav class="activity-pagination" aria-label="Páginas de transações">
+          {#if visible.page > 1}<a
+              class="text-link"
+              href={pageURL(visible.page - 1).href}
+              onclick={(event) => {
+                event.preventDefault();
+                goto(pageURL(visible.page - 1), {
+                  state: page.state,
+                  shallow: true,
+                  replace: true,
+                  reset: false
+                });
+              }}>Anterior</a
+            >{/if}
+          <span aria-live="polite"
+            >Página {visible.page} de {visible.pages}</span
+          >
+          {#if visible.page < visible.pages}<a
+              class="text-link"
+              href={pageURL(visible.page + 1).href}
+              onclick={(event) => {
+                event.preventDefault();
+                goto(pageURL(visible.page + 1), {
+                  state: page.state,
+                  shallow: true,
+                  replace: true,
+                  reset: false
+                });
+              }}>Próxima</a
+            >{/if}
+        </nav>
+      {/if}
       <!-- svelte-ignore a11y_no_noninteractive_tabindex (The scrolling table needs keyboard access.) -->
       <div
         class="table-scroll"
@@ -242,7 +321,7 @@
               ><th class="align-right">Valor</th></tr
             ></thead
           ><tbody>
-            {#each filtered as transaction (transaction.id)}<tr
+            {#each visible.items as transaction (transaction.id)}<tr
                 ><td
                   ><span
                     class="transaction-icon"
@@ -265,7 +344,11 @@
                   ></td
                 ><td
                   ><span class="category-chip">{transaction.categoryLabel}</span
-                  ></td
+                  >{#if editableCategories}<CategoryEditor
+                      {transaction}
+                      {hidden}
+                      onchanged={() => invalidateAll()}
+                    />{/if}</td
                 ><td class="muted">{transaction.accountName || 'Manual'}</td><td
                   class="muted"
                   >{transaction.date.slice(8, 10)}/{transaction.date.slice(

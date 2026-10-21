@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/usecase/notifications"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -16,15 +17,16 @@ import (
 
 // api serve as rotas JSON de leitura do dashboard sob /api.
 type api struct {
-	reader   ports.DashboardReader
-	sessions *sessions
-	logger   *slog.Logger
-	now      func() time.Time
-	coach    *coachService
-	insights *insights.Insights
-	syncer   chat.Syncer   // nil sem Open Finance
-	settings *SettingsDeps // nil sem a página de configurações
-	factor   *SecondFactor // nil = só senha
+	notifications *notifications.Service
+	reader        ports.DashboardReader
+	sessions      *sessions
+	logger        *slog.Logger
+	now           func() time.Time
+	coach         *coachService
+	insights      *insights.Insights
+	syncer        chat.Syncer   // nil sem Open Finance
+	settings      *SettingsDeps // nil sem a página de configurações
+	factor        *SecondFactor // nil = só senha
 
 	challenges *auth.Challenges
 
@@ -46,7 +48,7 @@ func (s *Server) mountAPI(password PasswordCheck, reader ports.DashboardReader, 
 	if err != nil {
 		return err
 	}
-	a := &api{reader: reader, sessions: sess, logger: s.logger, now: now, coach: newCoachService(s.coach, s.coachPaid), insights: insights.NewInsights(reader), syncer: s.syncer, settings: s.settings, factor: s.factor, challenges: auth.NewChallenges(), setup: s.setup}
+	a := &api{notifications: s.notifications, reader: reader, sessions: sess, logger: s.logger, now: now, coach: newCoachService(s.coach, s.coachPaid), insights: insights.NewInsights(reader), syncer: s.syncer, settings: s.settings, factor: s.factor, challenges: auth.NewChallenges(), setup: s.setup}
 	if a.setupSess, err = newSetupSessions(); err != nil {
 		return err
 	}
@@ -68,6 +70,10 @@ func (s *Server) mountAPI(password PasswordCheck, reader ports.DashboardReader, 
 	a.registerReview(rt)
 	a.registerTransactions(rt)
 	a.registerAccounts(rt)
+	a.registerAgenda(rt)
+	a.registerQuestions(rt)
+	a.registerNotifications(rt)
+	a.registerImports(rt)
 	a.registerGoals(rt)
 	a.registerCoach(rt)
 	a.registerCategorize(rt)

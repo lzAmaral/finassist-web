@@ -17,13 +17,13 @@ Este modo consulta as contas já autorizadas, sem depender do computador local l
 
 Configure as variáveis privadas de runtime listadas em `.env.example`: credenciais Pluggy e IDs dos itens, token do Blob privado, hash scrypt da senha, chave de sessão, chave de criptografia e segredo do cron. Guarde backup da chave de dados: sua perda impede ler os snapshots existentes. As credenciais nunca recebem prefixo `PUBLIC_` nem são commitadas.
 
-Use `web` como Root Directory na Vercel, Node.js 24, instalação `npm ci` e build `npm run build`. O agendamento `0 9 * * *` consulta a Pluggy diariamente; a hora é UTC e a execução pode variar conforme o plano. `/api/sync` aceita GET somente com `Authorization: Bearer <CRON_SECRET>`, e POST somente com sessão e origem válidas. Execute a primeira sincronização por esse endpoint antes do primeiro uso. O botão **Atualizar dados** consulta novamente, com intervalo mínimo de cinco minutos. Isso não força uma atualização no banco: lê os dados mais recentes disponíveis na Pluggy. A última sincronização bem-sucedida é preservada em caso de erro.
+Use `web` como Root Directory na Vercel, Node.js 24, instalação `npm ci` e build `npm run build`. O agendamento `0 9 * * *` consulta a Pluggy diariamente; a hora é UTC e a execução pode variar conforme o plano. `/api/sync` aceita GET somente com `Authorization: Bearer <CRON_SECRET>`, e POST somente com sessão e origem válidas. Após entrar, use **Buscar meus dados** para concluir a primeira sincronização; falhas permitem tentar novamente sem apresentar saldos fictícios. O botão **Atualizar dados** consulta novamente, com intervalo mínimo de cinco minutos. Isso não força uma atualização no banco: lê os dados mais recentes disponíveis na Pluggy. A última sincronização bem-sucedida é preservada em caso de erro.
 
 O login usa senha com hash scrypt, cookie HttpOnly, Secure em produção, SameSite Strict e validade de sete dias. As chaves precisam ser estáveis entre instâncias e deploys. Há limite de tentativas por IP em cada instância; este é um aplicativo pessoal de um proprietário, sem cadastro público nem isolamento multiusuário.
 
 O resumo considera lançamentos confirmados. Pendências ficam identificadas na lista, sem inflar os totais. Transferências próprias, aplicações e liquidações de fatura ficam fora de receitas/despesas; compras do cartão e estornos seguem o sentido do lançamento. Parcelas usam o mês previsto da fatura quando disponível. A visão geral separa as últimas entradas e saídas em dois blocos, com os totais confirmados do mês. Transferências identificadas entre contas próprias, aplicações e pagamentos de fatura ficam fora das listas e da exportação CSV; os registros originais continuam no snapshot. A página de transações permite filtrar por entrada ou saída, categoria, descrição e conta. Estornos permanecem nas saídas como crédito e reduzem as despesas. O saldo disponível soma contas bancárias em BRL e exclui faturas e investimentos. A precisão das categorias e a identificação de transferências dependem dos metadados da instituição.
 
-Este modo fornece consulta bancária, carteira manual e análise de gastos. Orçamentos, metas e lançamentos manuais via Telegram ainda pertencem à instalação Go; não são sincronizados com este snapshot. Um banco relacional gerenciado, como Supabase, pode ser adicionado quando essas operações forem integradas à versão cloud.
+Este modo fornece consulta bancária, cartões, carteira manual e análise de gastos. Operações de classificação, revisão, orçamento, metas, notificações, perguntas e importação exigem a instalação Go/PostgreSQL. A interface informa essa disponibilidade; o snapshot cloud não recebe escritas desses fluxos. A [ADR 0009](../docs/decisoes/0009-persistencia-web-go.md) registra a decisão e o procedimento de migração/reversão.
 
 ## Carteira e gráficos
 
@@ -51,7 +51,23 @@ Para testes de escrita, `FINASSIST_PRIVATE_NAMESPACE` isola a carteira manual e 
 
 Defina `FINASSIST_API_URL` com a origem do backend. Esse modo tem precedência sobre a consulta Pluggy. Para desenvolvimento use `http://127.0.0.1:3000`; em produção é necessária uma origem HTTPS acessível pela Vercel. `localhost` na Vercel não aponta para o computador do desenvolvedor.
 
-Inicie o Docker Compose na raiz e conclua `/setup` usando o `SETUP_TOKEN` da instalação ou entre em `/login` se já estiver configurado. O proxy preserva cookies, valida a origem das escritas e não permite cache das respostas financeiras. A API Go retorna até 100 transações por mês neste frontend, com aviso quando houver mais. No modo Pluggy, todas as transações do mês ficam disponíveis para busca e exportação.
+Inicie o Docker Compose na raiz e conclua `/setup` usando o `SETUP_TOKEN` da instalação ou entre em `/login` se já estiver configurado. O proxy preserva cookies, valida a origem das escritas e não permite cache das respostas financeiras. A interface percorre todas as páginas de transações da API Go para o mês escolhido. A tabela exibe páginas de 50 itens; busca e exportação consideram todo o conjunto filtrado. Uma falha ou mudança inconsistente entre páginas interrompe a carga, sem exportar resultados parciais. No modo Pluggy, todas as transações do mês ficam disponíveis para busca e exportação.
+
+## Operações integradas
+
+Com o backend Go configurado, o menu oferece:
+
+- **Classificar gastos:** corrigir um lançamento sem alterar outras parcelas, criar regras de descrição completa e revisar o alcance antes de reaplicar. Correções individuais sobrevivem à sincronização.
+- **Cartões e agenda:** saldo devedor e limites separados de compromissos manuais e estimativas. Fatura e quitação ficam indisponíveis quando a fonte não fornece evidência; uma data vencida não confirma pagamento.
+- **Revisão de gastos:** até três prioridades na visão geral, evidências e histórico na revisão completa, dispensar/restaurar sugestões e registrar/desfazer decisões. Economia potencial e observada são distintas; meses sem histórico não comprovam economia.
+- **Orçamento e metas:** metas de juntar, reduzir e reserva, correção fixa/variável/automática e projeções com premissas. Metas podem compartilhar o mesmo patrimônio; não reservam dinheiro separadamente. Limites por categoria ficam fora desta entrega.
+- **Notificações:** preferências, prévia e histórico na aplicação; agendamento executado pelo Go, sem navegador aberto. O canal externo depende da configuração da instalação.
+- **Perguntas:** consultas prontas, calculadas no Go, com período, origem e links. Funcionam sem Gemini e não enviam um novo payload à IA.
+- **Importar extrato:** CSV/OFX de conta bancária em BRL, prévia, revisão de correspondências, confirmação e reversão por lote. Movimentos já conciliados com Open Finance são preservados na reversão.
+
+Aplique as migrations até `022` conforme o [README da instalação](../README.md#atualizando-uma-instalação-existente). O Go deve permanecer em execução para API e agendamentos. Os componentes de carteira/proventos/IA continuam nos documentos privados do Blob, protegidos pela sessão Go; token do Blob e chave de criptografia são necessários para essa capacidade. Posições de um snapshot cloud anterior aparecem com origem e data próprias, sem somá-las novamente às posições importadas no Go.
+
+O [índice das dez tarefas](../docs/tasks/README.md) registra critérios, testes e limitações por entrega.
 
 ## Organização
 

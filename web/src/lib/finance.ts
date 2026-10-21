@@ -7,6 +7,7 @@ export interface Transaction {
   paymentMethodLabel: string;
   kind: 'EXPENSE' | 'INCOME' | 'TRANSFER';
   amount: number;
+  accountId?: string;
   accountName?: string;
   status: string;
 }

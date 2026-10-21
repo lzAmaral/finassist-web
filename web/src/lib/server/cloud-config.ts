@@ -36,3 +36,9 @@ export function cloudConfigured() {
     c.blobToken
   );
 }
+
+// O armazenamento auxiliar do modo Go não exige outro login nem credenciais Pluggy.
+export function privateStorageConfigured() {
+  const c = cloudConfig();
+  return !!(c.blobToken && c.dataKey && /^[a-f0-9]{64}$/i.test(c.dataKey));
+}

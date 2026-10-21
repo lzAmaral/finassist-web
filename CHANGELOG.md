@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Não lançado]
 
+### Melhorias do FinAssist Web
+- Primeiro uso com estados separados de configuração, primeira sincronização, falha e dados disponíveis; nenhum erro convertido em saldo zero. Busca e CSV usam todas as páginas do Go, com paginação visual de 50 itens.
+- Go/PostgreSQL como fonte das operações financeiras; sessão Go também protege carteira manual, proventos e configuração de IA no Blob. Snapshot cloud anterior permanece identificado como fonte separada. [ADR 0009](docs/decisoes/0009-persistencia-web-go.md) documenta migração e reversão sintéticas.
+- Cartões e agenda com datas e estimativas identificadas; ausência de dados de fatura/quitação explícita. Classificação por lançamento e regras com prévia; revisão com evidências, dispensa e decisões persistentes; metas e orçamento com premissas e histórico insuficiente.
+- Central de notificações configuráveis, perguntas determinísticas sobre os dados e importação CSV/OFX com prévia, confirmação e reversão. Escopo e verificações em [docs/tasks/README.md](docs/tasks/README.md).
+- Bancos existentes precisam das migrations 020–022, nesta ordem, antes de habilitar os novos fluxos. Nenhuma migração de produção é executada pela atualização dos arquivos:
+
+```sh
+for f in backend/migrations/02[0-2]_*.sql; do docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U finassist -d finassist < "$f" || break; done
+```
+
 ### Interno
 - **Refatoração de estrutura** (sem mudança de comportamento): `usecase` dividido em contextos (`ledger`, `openfinance`, `planning`, `review`, `coach`, `balances`, `insights`) com teste de dependências; `ports` só com interfaces e entidades em `domain`; um repositório de banco por contexto; `api.go` e `dashboard_queries.go` divididos; guardas de HTTP (`jsonOnly`, `decodeJSON`); `internal/app` monta o aplicativo (`main.go` com 26 linhas); `config.Load(overrides)` sem estado global; `domain.Clock`; `AccountType` tipado; golangci-lint, CI e CONTRIBUTING; frontend em `features/` e `shared/`; documentação em `docs/` (arquitetura, regras de cálculo, decisões, API).
 

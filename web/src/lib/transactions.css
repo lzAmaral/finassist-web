@@ -189,6 +189,7 @@
   font-weight: 600;
 }
 .activity-search-filters {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -275,4 +276,16 @@
   .activity-search-filters select {
     width: 100%;
   }
+}
+
+.activity-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 8px 22px 18px;
+  font-size: 12px;
+}
+.activity-pagination a {
+  padding: 8px 0;
 }

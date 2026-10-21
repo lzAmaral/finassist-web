@@ -95,6 +95,12 @@ func (r *LedgerRepo) SaveExternal(ctx context.Context, purchase *domain.Purchase
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
+	if claimed, err := claimStatementExternal(ctx, tx, purchase, payment); err != nil {
+		return err
+	} else if claimed {
+		return tx.Commit(ctx)
+	}
+
 	if err := insertPurchase(ctx, tx, purchase); err != nil {
 		return err
 	}
@@ -119,6 +125,10 @@ func (r *LedgerRepo) SaveExternal(ctx context.Context, purchase *domain.Purchase
 		return fmt.Errorf("erro ao aplicar regra de categoria: %w", err)
 	}
 
+	if err := applyExactPaymentCategory(ctx, tx, purchase.ID, payment.ID); err != nil {
+		return err
+	}
+
 	return tx.Commit(ctx)
 }
 
@@ -132,6 +142,7 @@ func (r *LedgerRepo) ReconcileExternal(ctx context.Context, tx ports.ExternalTra
 			FROM payments pay
 			JOIN purchases p ON p.id = pay.purchase_id
 			WHERE pay.external_id IS NULL
+			  AND (pay.account_id IS NULL OR pay.account_id = $6)
 			  AND pay.status != 'CANCELLED'
 			  AND p.kind = $2
 			  AND ABS(pay.amount - $3) < 0.005

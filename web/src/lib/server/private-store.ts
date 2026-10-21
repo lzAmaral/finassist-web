@@ -54,7 +54,7 @@ export async function writePrivate<T>(path: string, value: T, etag?: string) {
     access: 'private',
     token: c.blobToken,
     addRandomSuffix: false,
-    ...(etag ? { ifMatch: etag } : {}),
+    ...(etag ? { ifMatch: etag, allowOverwrite: true } : {}),
     contentType: 'application/octet-stream',
     cacheControlMaxAge: 60
   });

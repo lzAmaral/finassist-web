@@ -25,6 +25,7 @@ func TestBuildSavings(t *testing.T) {
 		dec("parcial", time.August, 100),
 	}
 	rows := []domain.ExpenseKeyMonth{
+		charge("other", time.July, 10), charge("other", time.August, 10), charge("other", time.September, 10),
 		charge("ok", time.June, 40), // o mês da decisão não conta
 		charge("voltou", time.August, 40),
 		charge("voltou-aberto", time.October, 39.9), // voltou no mês em andamento
@@ -56,5 +57,13 @@ func TestBuildSavings(t *testing.T) {
 	// ok 120 + voltou 80 + voltou-aberto 40 + parcial 100 = 340; ritmo = confirmadas (ok 40 + parcial 100).
 	if math.Abs(realized-340) > 0.01 || perMonth != 140 {
 		t.Errorf("totais: %v %v", realized, perMonth)
+	}
+}
+
+func TestSavingsNeedsObservedMonths(t *testing.T) {
+	d := domain.Decision{Kind: ReviewFixed, Key: "subscription", Month: month(2026, time.June), Monthly: 50}
+	got := BuildSavings([]domain.Decision{d}, nil, month(2026, time.October))[0]
+	if got.Status != SavingPending || got.Realized != 0 || got.MonthsConfirmed != 0 {
+		t.Fatalf("ausência de dados não comprova economia: %+v", got)
 	}
 }

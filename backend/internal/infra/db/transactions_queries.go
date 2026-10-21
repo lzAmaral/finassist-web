@@ -30,7 +30,7 @@ func transactionWhere(f domain.TransactionFilter) (string, []any) {
 		add("p.kind = ?", f.Kind)
 	}
 	if f.Category != "" {
-		add("p.category = ?", f.Category)
+		add("effective_payment_category(pay.id, p.category) = ?", f.Category)
 	}
 	if f.PaymentMethod != "" {
 		add("p.payment_method = ?", f.PaymentMethod)
@@ -51,7 +51,7 @@ func (r *TransactionsRepo) Transactions(ctx context.Context, f domain.Transactio
 	// COUNT(*) OVER () traz o total sem uma segunda consulta; sem linhas, o total é 0.
 	query := fmt.Sprintf(`
 		SELECT pay.id, `+txDate+` AS date,
-		       COALESCE(p.description, ''), p.category, p.payment_method, p.kind,
+		       COALESCE(p.description, ''), effective_payment_category(pay.id, p.category), p.payment_method, p.kind,
 		       COALESCE(p.transfer_direction, ''), p.type, pay.status, pay.amount,
 		       pay.installment_number, a.id, COALESCE(a.name || ' ' || a.last4, ''),
 		       pay.external_id IS NOT NULL, COUNT(*) OVER ()
@@ -90,7 +90,7 @@ func (r *TransactionsRepo) TransactionGroups(ctx context.Context, f domain.Trans
 	var key, order string
 	switch by {
 	case domain.GroupByCategory:
-		key, order = "p.category", "expense DESC, income DESC, transfer DESC, key"
+		key, order = "effective_payment_category(pay.id, p.category)", "expense DESC, income DESC, transfer DESC, key"
 	case domain.GroupByDay:
 		key, order = "TO_CHAR("+txDate+", 'YYYY-MM-DD')", "key DESC"
 	default:

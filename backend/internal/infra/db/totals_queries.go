@@ -70,7 +70,7 @@ func (r *TotalsRepo) ExpenseBreakdown(ctx context.Context, month time.Time, by d
 	var key, name string
 	switch by {
 	case domain.BreakdownByCategory:
-		key, name = "p.category", "p.category"
+		key, name = "effective_payment_category(pay.id, p.category)", "effective_payment_category(pay.id, p.category)"
 	case domain.BreakdownByPaymentMethod:
 		key, name = "p.payment_method", "p.payment_method"
 	case domain.BreakdownByAccount:

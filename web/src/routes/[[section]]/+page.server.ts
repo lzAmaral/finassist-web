@@ -4,6 +4,7 @@ import type { Dashboard } from '#lib/finance.js';
 import { shiftMonth } from '#lib/finance.js';
 import { emptyDashboard } from '#lib/server/empty.js';
 import { backendURL } from '#lib/server/backend.js';
+import { cloudConfigured } from '#lib/server/cloud-config.js';
 
 export const load: PageServerLoad = async ({
   url,
@@ -24,7 +25,9 @@ export const load: PageServerLoad = async ({
     ? candidate
     : current;
   setHeaders({ 'cache-control': 'private, no-store' });
-  if (!backendURL()) return { section, dashboard: emptyDashboard(month) };
+  const cloud = !backendURL() && cloudConfigured();
+  if (!backendURL() && !cloud)
+    return { section, dashboard: emptyDashboard(month) };
   const get = async (path: string) => {
     const res = await fetch(`/api/${path}`);
     if (res.status === 401) redirect(303, '/login');
@@ -34,6 +37,11 @@ export const load: PageServerLoad = async ({
     return res.json();
   };
   await get('me');
+  if (cloud)
+    return {
+      section,
+      dashboard: (await get(`dashboard?month=${month}`)) as Dashboard
+    };
   const [summary, transactions, breakdown, series, balances, budget, goals] =
     await Promise.all([
       get(`summary?month=${month}`),

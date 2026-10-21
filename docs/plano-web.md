@@ -38,6 +38,12 @@ Componentes apresentam dados; módulos de aplicação organizam fluxos; adaptado
 
 O backend atual é de uso pessoal. Não disponibilizar os dados de uma instalação como um serviço público para múltiplos usuários sem projetar isolamento e autenticação adequados.
 
+## Consulta bancária cloud — 21/10/2026
+
+Foi acrescentado um modo de consulta independente da instalação Go: o servidor SvelteKit sincroniza contas e transações da Pluggy, salva um snapshot criptografado em Vercel Blob privado e apresenta os dados somente após login do proprietário. Um cron diário e uma atualização manual autenticada mantêm a consulta. O adaptador Go continua disponível por `FINASSIST_API_URL`.
+
+A conversão e a agregação cloud estão em um módulo puro no servidor, coberto por testes de cartões, estornos, parcelas, transferências, pendências, precisão de centavos e moedas. Não há cálculo financeiro no navegador. O snapshot não recebe os lançamentos de Telegram, orçamentos nem metas da instalação Go; integrar essas escritas e seu banco é uma próxima etapa explícita. Supabase não é necessário para a consulta bancária atual.
+
 ## Atualização — remoção dos dados de exemplo
 
 A publicação passou a apresentar um painel vazio enquanto a conexão estiver pendente. Os saldos, transações, contas e metas fictícios foram removidos do frontend. A ausência de conexão não é apresentada como saldo zero nem como sessão autenticada.

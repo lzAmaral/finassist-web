@@ -1,6 +1,6 @@
 # FinAssist Web
 
-Frontend SvelteKit 3 + Svelte 5 + TypeScript para o FinAssist, com adaptador oficial da Vercel. Interface responsiva em português com visão geral, transações com busca e exportação CSV, orçamento, metas, contas, login e configuração inicial por Telegram.
+SvelteKit 3, Svelte 5 e TypeScript. Painel em português com saldos, gráficos mensais, busca de transações, exportação CSV e acesso protegido. Publicado na [Vercel](https://finassist-web.vercel.app).
 
 ## Executar
 
@@ -9,36 +9,42 @@ npm ci
 npm run dev -- --host 127.0.0.1
 ```
 
-Sem `FINASSIST_API_URL`, o app exibe um **painel vazio com conexão pendente**. Nenhum saldo, lançamento, conta ou meta é gerado. Valores desconhecidos aparecem como travessão, e a exportação fica desabilitada enquanto a lista estiver vazia.
+Copie `.env.example` para `.env.local` e configure um dos modos abaixo. Sem configuração completa, o painel permanece vazio. Não há dados de demonstração nem substituição de erros por valores fictícios.
 
-## Conectar o backend real
+## Consulta Pluggy na Vercel
 
-1. Inicie o backend original com Docker Compose na raiz do repositório.
-2. Copie `.env.example` para `.env` **nesta pasta**.
-3. Defina `FINASSIST_API_URL=http://127.0.0.1:3000` e reinicie o servidor SvelteKit.
-4. Acesse `/setup` e use o `SETUP_TOKEN` do `.env` **da raiz** para concluir a configuração. Se a instalação já estiver configurada, use `/login`.
+Este modo consulta as contas já autorizadas, sem depender do computador local ligado. A sincronização percorre todas as páginas da API `/v2/transactions`, salva um snapshot criptografado com AES-256-GCM em **Vercel Blob privado** e só entrega os dados ao proprietário autenticado. Não há URL pública para o snapshot. CPF, números de conta e dados de identidade não são armazenados.
 
-O modo real nunca substitui falhas de conexão por dados fictícios. Ele usa as rotas `/api/me`, `/api/summary`, `/api/transactions`, `/api/breakdown`, `/api/timeseries`, `/api/balances`, `/api/budget` e `/api/goals`. A lista inicial traz até 100 transações por mês, com aviso quando há mais registros; a exportação inclui apenas os registros exibidos e filtrados.
+Configure as variáveis privadas de runtime listadas em `.env.example`: credenciais Pluggy e IDs dos itens, token do Blob privado, hash scrypt da senha, chave de sessão, chave de criptografia e segredo do cron. Guarde backup da chave de dados: sua perda impede ler os snapshots existentes. As credenciais nunca recebem prefixo `PUBLIC_` nem são commitadas.
 
-## Arquitetura
+Use `web` como Root Directory na Vercel, Node.js 24, instalação `npm ci` e build `npm run build`. O agendamento `0 9 * * *` consulta a Pluggy diariamente; a hora é UTC e a execução pode variar conforme o plano. `/api/sync` aceita GET somente com `Authorization: Bearer <CRON_SECRET>`, e POST somente com sessão e origem válidas. Execute a primeira sincronização por esse endpoint antes do primeiro uso. O botão **Atualizar dados** consulta novamente, com intervalo mínimo de cinco minutos. Isso não força uma atualização no banco: lê os dados mais recentes disponíveis na Pluggy. A última sincronização bem-sucedida é preservada em caso de erro.
 
-- `src/lib/finance.ts`: contratos e formatação para apresentação.
-- `src/lib/server/empty.ts`: estado vazio quando a conexão ainda não foi configurada.
-- `src/lib/server/backend.ts`: configuração privada da origem da API.
-- `src/routes/api/[...path]/+server.ts`: proxy com validação de origem para escritas, cookies HttpOnly e respostas sem cache.
-- `src/routes/[[section]]/+page.server.ts`: carregamento autenticado dos dados reais ou estado de conexão pendente.
-- As regras financeiras reais continuam no backend Go. O navegador não recebe chaves Pluggy nem conexão PostgreSQL.
+O login usa senha com hash scrypt, cookie HttpOnly, Secure em produção, SameSite Strict e validade de sete dias. As chaves precisam ser estáveis entre instâncias e deploys. Há limite de tentativas por IP em cada instância; este é um aplicativo pessoal de um proprietário, sem cadastro público nem isolamento multiusuário.
 
-## Publicar na Vercel
+O resumo considera lançamentos confirmados. Pendências ficam identificadas na lista, sem inflar os totais. Transferências próprias, aplicações e liquidações de fatura ficam fora de receitas/despesas; compras do cartão e estornos seguem o sentido do lançamento. Parcelas usam o mês previsto da fatura quando disponível. O saldo disponível soma contas bancárias em BRL e exclui faturas e investimentos. A precisão das categorias e a identificação de transferências dependem dos metadados da instituição.
 
-Use `web` como **Root Directory**, framework SvelteKit, Node.js 24, instalação `npm ci` e build `npm run build`. Sem `FINASSIST_API_URL`, a publicação permanece vazia, aguardando conexão. Para modo real, configure uma origem HTTPS de backend persistente acessível pela Vercel; `localhost` na Vercel não aponta para o computador do desenvolvedor.
+Este modo fornece consulta das finanças bancárias. Orçamentos, metas e lançamentos manuais via Telegram ainda pertencem à instalação Go; não são sincronizados com este snapshot. Um banco relacional gerenciado, como Supabase, pode ser adicionado quando essas operações forem integradas à versão cloud.
 
-O backend atual mantém jobs e canais de conversa, por isso exige um serviço de containers/VM separado. O PostgreSQL local atende ao desenvolvimento. Supabase é opcional como PostgreSQL gerenciado: as tabelas financeiras devem ficar em esquema privado, fora do Data API, ou ter RLS revisado antes de qualquer exposição. Não habilite acesso direto do navegador às tabelas herdadas.
+## API Go existente
+
+Defina `FINASSIST_API_URL` com a origem do backend. Esse modo tem precedência sobre a consulta Pluggy. Para desenvolvimento use `http://127.0.0.1:3000`; em produção é necessária uma origem HTTPS acessível pela Vercel. `localhost` na Vercel não aponta para o computador do desenvolvedor.
+
+Inicie o Docker Compose na raiz e conclua `/setup` usando o `SETUP_TOKEN` da instalação ou entre em `/login` se já estiver configurado. O proxy preserva cookies, valida a origem das escritas e não permite cache das respostas financeiras. A API Go retorna até 100 transações por mês neste frontend, com aviso quando houver mais. No modo Pluggy, todas as transações do mês ficam disponíveis para busca e exportação.
+
+## Organização
+
+- `src/lib/server/finance-data.ts`: conversão e agregação puras, testadas com dados sintéticos.
+- `pluggy-sync.ts`: autenticação e paginação da fonte bancária, sem acesso pelo navegador.
+- `cloud-store.ts`: persistência privada, criptografia e escrita condicional por ETag.
+- `cloud-auth.ts` e `cloud-api.ts`: sessão do proprietário e rotas protegidas.
+- `backend.ts`: configuração do proxy para Go.
+- `src/lib/finance.ts`: contrato de apresentação compartilhado pelos dois modos.
 
 ## Verificar
 
 ```sh
 npm run check
+npm test
 npm run build
 ```
 

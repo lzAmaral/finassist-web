@@ -2,7 +2,7 @@
 
 > **FinAssist Web, por Luiz Amaral:** evolução independente do [projeto original de Marcos Antônio Albano Júnior](https://github.com/MarcosAAlbanoJunior/go-financial-assistant), preservando a licença MIT e os créditos. O plano para o novo frontend SvelteKit e implantação está em [docs/plano-web.md](docs/plano-web.md). As instruções abaixo descrevem a aplicação original, que continua disponível.
 
-**Novo frontend:** [abrir painel na Vercel](https://finassist-web.vercel.app) · [executar e conectar à sua API](web/README.md). Feito em SvelteKit, com dashboard, busca e exportação de transações, orçamento, metas e contas. O painel permanece vazio até que a conexão com seus dados seja configurada.
+**Novo frontend:** [abrir painel na Vercel](https://finassist-web.vercel.app) · [configurar e executar](web/README.md). Feito em SvelteKit, com dashboard, busca e exportação de transações. Oferece consulta Pluggy com armazenamento privado criptografado e login, ou conexão à API Go para os recursos completos da instalação. Sem configuração, o painel permanece vazio.
 
 Conecte seus bancos pelo **Open Finance**, converse com o seu próprio **bot no Telegram** e acompanhe tudo num **dashboard** no navegador. Roda no seu computador ou servidor, com os seus dados no seu banco de dados.
 

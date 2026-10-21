@@ -17,6 +17,8 @@ export interface Totals {
 }
 export interface Dashboard {
   mode: 'unconfigured' | 'live';
+  source?: 'pluggy';
+  syncedAt?: string;
   month: string;
   summary: { current: Totals; previous: Totals; bankBalance: number | null };
   transactions: { items: Transaction[]; total: number };

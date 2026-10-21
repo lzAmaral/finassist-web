@@ -72,9 +72,9 @@
           >{busy ? 'Conectando...' : 'Entrar no meu espaço →'}</button
         >
       </form>
-      <a class="text-link" href="/setup"
-        >Primeiro acesso? Configurar instalação ↗</a
-      >{:else}<p class="error">
+      {#if !data.cloud}<a class="text-link" href="/setup"
+          >Primeiro acesso? Configurar instalação ↗</a
+        >{/if}{:else}<p class="error">
         O acesso estará disponível quando a conexão com sua instalação estiver
         configurada.
       </p>

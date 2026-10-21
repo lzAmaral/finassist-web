@@ -7,6 +7,23 @@
   let hidden = $state(false);
   let search = $state('');
   let category = $state('');
+  let syncing = $state(false);
+  let syncMessage = $state('');
+  async function synchronize() {
+    syncing = true;
+    syncMessage = '';
+    try {
+      const response = await fetch('/api/sync', { method: 'POST' });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || 'Não foi possível atualizar.');
+      location.reload();
+    } catch (error) {
+      syncMessage =
+        error instanceof Error ? error.message : 'Falha de conexão.';
+      syncing = false;
+    }
+  }
   const colors = [
     '#56866d',
     '#a6bb8c',
@@ -196,6 +213,28 @@
             sua instalação e seus bancos para acompanhar saldos e gastos.</span
           ><a href="/conexoes">Como conectar meus bancos <span>↗</span></a>
         </div>{/if}
+      {#if d.source === 'pluggy'}
+        <div class="connection-banner">
+          <span
+            ><strong>Suas contas estão conectadas.</strong> Dados consultados em {new Date(
+              d.syncedAt!
+            ).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}. A
+            atualização bancária depende da Pluggy.</span
+          >
+          <button
+            class="secondary-button"
+            onclick={synchronize}
+            disabled={syncing}
+            >{syncing ? 'Atualizando…' : 'Atualizar dados'}</button
+          >
+        </div>
+        <p class="fine-print">
+          Resumo de movimentações confirmadas. Transferências entre suas contas,
+          aplicações e pagamentos de fatura ficam fora das entradas e saídas.
+          Pendências aparecem na lista.
+        </p>
+        {#if syncMessage}<p class="error" role="alert">{syncMessage}</p>{/if}
+      {/if}
 
       {#if data.section === ''}
         <section class="metrics" aria-label="Resumo financeiro">
@@ -216,7 +255,7 @@
             <div class="metric-foot">
               <span class="tiny-dot"></span>{d.mode === 'unconfigured'
                 ? 'Aguardando suas contas'
-                : `${d.balances.institutions.length} instituições`}
+                : `${d.balances.institutions.length} contas conectadas`}
             </div>
             <span class="balance-decoration" aria-hidden="true">↗</span>
           </article>
@@ -354,8 +393,8 @@
               </h2>
               <p>
                 {d.transactions.total} lançamentos no período{d.transactions
-                  .total > 100
-                  ? ' · exibindo os 100 mais recentes'
+                  .total > d.transactions.items.length
+                  ? ` · exibindo os ${d.transactions.items.length} mais recentes`
                   : ''}
               </p>
             </div>
@@ -405,9 +444,13 @@
                         /></span
                       ><span class="transaction-description"
                         >{t.description}<small
-                          >{t.kind === 'INCOME'
-                            ? 'Receita'
-                            : t.paymentMethodLabel}</small
+                          >{t.kind === 'TRANSFER'
+                            ? 'Transferência'
+                            : t.kind === 'INCOME'
+                              ? 'Receita'
+                              : t.paymentMethodLabel}{t.status === 'PENDING'
+                            ? ' · Pendente'
+                            : ''}</small
                         ></span
                       ></td
                     ><td
@@ -503,30 +546,55 @@
                 <p>
                   {d.mode === 'unconfigured'
                     ? 'Nenhuma conexão configurada'
-                    : 'Dados recebidos da sua API'}
+                    : d.source === 'pluggy'
+                      ? 'Saldos bancários em reais · cartões fora do saldo disponível'
+                      : 'Dados recebidos da sua API'}
                 </p>
               </div>
               <Icon name="bank" />
             </div>
-            {#each d.balances.institutions as bank, i}<div class="bank-row">
-                <span
-                  class="bank-logo"
-                  style={`background:${i % 2 ? '#ece7f2' : '#e3eee5'};color:${i % 2 ? '#79638d' : '#56866d'}`}
-                  ><Icon name="bank" size={25} /></span
-                >
-                <div>
-                  <strong>{bank.name}</strong><small
-                    >{bank.accounts.length} conta(s) · {bank.stale
-                      ? 'Atualização pendente'
-                      : 'Sincronizada'}</small
+            {#if d.source === 'pluggy'}
+              {#each d.balances.institutions as bank}<div class="bank-row">
+                  <span class="bank-logo"><Icon name="bank" size={25} /></span>
+                  <div>
+                    <strong>{bank.name}</strong><small
+                      >{bank.stale
+                        ? 'Banco com atualização pendente'
+                        : 'Conectada à Pluggy'}</small
+                    >
+                  </div>
+                  <strong
+                    >{bank.accounts[0]
+                      ? display(bank.accounts[0].balance)
+                      : '—'}</strong
                   >
-                </div>
-                <strong
-                  >{bank.total === null ? '—' : display(bank.total)}</strong
-                >
-              </div>{:else}<div class="empty-state">
-                Nenhuma conta conectada.
-              </div>{/each}
+                </div>{/each}
+              <p class="fine-print">
+                O valor de um cartão representa sua fatura, não dinheiro
+                disponível. Investimentos não estão incluídos no saldo das
+                contas.
+              </p>
+            {:else}
+              {#each d.balances.institutions as bank, i}<div class="bank-row">
+                  <span
+                    class="bank-logo"
+                    style={`background:${i % 2 ? '#ece7f2' : '#e3eee5'};color:${i % 2 ? '#79638d' : '#56866d'}`}
+                    ><Icon name="bank" size={25} /></span
+                  >
+                  <div>
+                    <strong>{bank.name}</strong><small
+                      >{bank.accounts.length} conta(s) · {bank.stale
+                        ? 'Atualização pendente'
+                        : 'Sincronizada'}</small
+                    >
+                  </div>
+                  <strong
+                    >{bank.total === null ? '—' : display(bank.total)}</strong
+                  >
+                </div>{:else}<div class="empty-state">
+                  Nenhuma conta conectada.
+                </div>{/each}
+            {/if}
           </section>
           <section class="panel connect-guide">
             <span class="goal-icon"><Icon name="link" size={26} /></span>
@@ -535,11 +603,17 @@
               O FinAssist lê seus dados pelo Meu Pluggy. A autorização acontece
               no banco e as credenciais de integração ficam no backend.
             </p>
-            <ol>
-              <li>Conecte suas contas no Meu Pluggy.</li>
-              <li>Configure a integração na instalação original.</li>
-              <li>Aponte esta interface para a API do FinAssist.</li>
-            </ol>
+            {#if d.source === 'pluggy'}
+              <p>
+                Suas contas autorizadas já estão sendo consultadas. Use
+                “Atualizar dados” para buscar a versão mais recente disponível
+                na Pluggy.
+              </p>
+            {:else}<ol>
+                <li>Conecte suas contas no Meu Pluggy.</li>
+                <li>Configure a integração na instalação original.</li>
+                <li>Aponte esta interface para a API do FinAssist.</li>
+              </ol>{/if}
             <a
               class="primary-button"
               href="https://meu.pluggy.ai"
@@ -554,7 +628,9 @@
             <p class="fine-print">
               {d.mode === 'unconfigured'
                 ? 'Suas contas ainda não estão conectadas.'
-                : 'Novas conexões são configuradas no painel original.'}
+                : d.source === 'pluggy'
+                  ? 'Conexões existentes são atualizadas automaticamente todos os dias.'
+                  : 'Novas conexões são configuradas no painel original.'}
             </p>
           </section>
         </div>{/if}

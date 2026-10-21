@@ -1,9 +1,14 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { backendURL } from '#lib/server/backend.js';
+import { cloudConfigured } from '#lib/server/cloud-config.js';
+import { cloudAPI } from '#lib/server/cloud-api.js';
 
-const proxy: RequestHandler = async ({ request, url, params }) => {
+export const config = { maxDuration: 120 };
+const proxy: RequestHandler = async (event) => {
+  const { request, url, params } = event;
   const base = backendURL();
+  if (!base && cloudConfigured()) return cloudAPI(event);
   if (!base)
     return json(
       {

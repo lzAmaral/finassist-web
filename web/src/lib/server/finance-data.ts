@@ -75,7 +75,7 @@ function monthOffset(month: string, offset: number) {
 }
 
 // The direction is authoritative: credit cards invert the amount sign.
-// Transfers stay visible for reconciliation, but do not inflate income/expenses.
+// Transfers remain in the source data for reconciliation, outside income/expenses.
 export function movement(t: Movement, account: Account): Transaction | null {
   const rawAmount = t.amountInAccountCurrency ?? t.amount;
   if (

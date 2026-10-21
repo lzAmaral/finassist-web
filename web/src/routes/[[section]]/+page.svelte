@@ -3,14 +3,13 @@
   import Icon from '#lib/Icon.svelte';
   import SpendingCharts from '#lib/components/SpendingCharts.svelte';
   import InvestmentPortfolio from '#lib/components/InvestmentPortfolio.svelte';
+  import TransactionActivity from '#lib/components/TransactionActivity.svelte';
   import SpendingAnalysis from '#lib/components/SpendingAnalysis.svelte';
   import { Button } from '#lib/components/ui/button/index.js';
   import { money, monthLabel, shiftMonth, percent } from '#lib/finance.js';
   let { data }: PageProps = $props();
   let d = $derived(data.dashboard);
   let hidden = $state(false);
-  let search = $state('');
-  let category = $state('');
   let syncing = $state(false);
   let syncMessage = $state('');
   async function synchronize() {
@@ -48,50 +47,11 @@
   let title = $derived(
     nav.find((n) => n[0] === data.section)?.[1] ?? 'Visão geral'
   );
-  let filtered = $derived(
-    d.transactions.items.filter(
-      (t) =>
-        (!category || t.categoryLabel === category) &&
-        `${t.description} ${t.categoryLabel}`
-          .toLocaleLowerCase('pt-BR')
-          .includes(search.toLocaleLowerCase('pt-BR'))
-    )
-  );
-  let categories = $derived([
-    ...new Set(d.transactions.items.map((t) => t.categoryLabel))
-  ]);
   let available = $derived(
     d.summary.current.income - d.summary.current.expense
   );
   const display = (n: number) =>
     d.mode === 'unconfigured' ? '—' : hidden ? '••••••' : money(n);
-  function exportCSV() {
-    const cell = (v: unknown) => {
-      const s = String(v);
-      return '"' + s.replace(/^[=+@-]/, "'").replaceAll('"', '""') + '"';
-    };
-    const content =
-      '\uFEFF' +
-      [
-        ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'],
-        ...filtered.map((t) => [
-          t.date,
-          t.description,
-          t.categoryLabel,
-          t.kind,
-          t.amount.toFixed(2)
-        ])
-      ]
-        .map((row) => row.map(cell).join(';'))
-        .join('\r\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(
-      new Blob([content], { type: 'text/csv;charset=utf-8' })
-    );
-    a.download = `finassist-${d.month}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
   async function logout() {
     await fetch('/api/logout', {
       method: 'POST',
@@ -225,10 +185,10 @@
           >
         </div>
         {#if data.section !== 'investimentos'}<p class="fine-print">
-          Resumo de movimentações confirmadas. Transferências entre suas contas,
-          aplicações e pagamentos de fatura ficam fora das entradas e saídas.
-          Pendências aparecem na lista.
-        </p>{/if}
+            Resumo de movimentações confirmadas. Transferências entre suas
+            contas, aplicações e pagamentos de fatura ficam fora das entradas e
+            saídas. Pendências aparecem na lista.
+          </p>{/if}
         {#if syncMessage}<p class="error" role="alert">{syncMessage}</p>{/if}
       {/if}
 
@@ -318,100 +278,11 @@
           </section>{/if}
       {/if}
       {#if data.section === '' || data.section === 'transacoes'}
-        <section class="panel transactions-panel">
-          <div class="panel-heading">
-            <div>
-              <h2>
-                {data.section === ''
-                  ? 'Últimas movimentações'
-                  : 'Suas transações'}
-              </h2>
-              <p>
-                {d.transactions.total} lançamentos no período{d.transactions
-                  .total > d.transactions.items.length
-                  ? ` · exibindo os ${d.transactions.items.length} mais recentes`
-                  : ''}
-              </p>
-            </div>
-            {#if data.section === ''}<a
-                class="text-link"
-                href={`/transacoes?month=${d.month}`}
-                >Ver todas <span>↗</span></a
-              >{:else}<button
-                class="secondary-button"
-                onclick={exportCSV}
-                disabled={filtered.length === 0}
-                ><Icon name="download" size={16} />Exportar CSV</button
-              >{/if}
-          </div>
-          {#if data.section === 'transacoes'}<div class="filters">
-              <label class="search-field"
-                ><Icon name="search" size={18} /><input
-                  aria-label="Buscar transações"
-                  bind:value={search}
-                  placeholder="Buscar uma movimentação..."
-                /></label
-              ><select aria-label="Filtrar por categoria" bind:value={category}
-                ><option value="">Todas as categorias</option
-                >{#each categories as c}<option>{c}</option>{/each}</select
-              ><span class="filter-count"
-                >{filtered.length}
-                {filtered.length === 1 ? 'resultado' : 'resultados'}</span
-              >
-            </div>{/if}
-          <div class="table-scroll">
-            <table>
-              <thead
-                ><tr
-                  ><th>Movimentação</th><th>Categoria</th><th>Conta</th><th
-                    >Data</th
-                  ><th class="align-right">Valor</th></tr
-                ></thead
-              ><tbody
-                >{#each data.section === '' ? filtered.slice(0, 5) : filtered as t}<tr
-                    ><td
-                      ><span
-                        class:income-tx={t.kind === 'INCOME'}
-                        class="transaction-icon"
-                        ><Icon
-                          name={t.kind === 'INCOME' ? 'down' : 'up'}
-                          size={17}
-                        /></span
-                      ><span class="transaction-description"
-                        >{t.description}<small
-                          >{t.kind === 'TRANSFER'
-                            ? 'Transferência'
-                            : t.kind === 'INCOME'
-                              ? 'Receita'
-                              : t.paymentMethodLabel}{t.status === 'PENDING'
-                            ? ' · Pendente'
-                            : ''}</small
-                        ></span
-                      ></td
-                    ><td
-                      ><span class="category-chip">{t.categoryLabel}</span></td
-                    ><td class="muted">{t.accountName || 'Manual'}</td><td
-                      class="muted"
-                      >{t.date.slice(8, 10)}/{t.date.slice(5, 7)}</td
-                    ><td
-                      class:green-text={t.kind === 'INCOME'}
-                      class="align-right amount"
-                      >{t.kind === 'INCOME'
-                        ? '+'
-                        : t.kind === 'EXPENSE'
-                          ? '−'
-                          : ''}
-                      {display(t.amount)}</td
-                    ></tr
-                  >{:else}<tr
-                    ><td colspan="5" class="empty-state"
-                      >Nenhuma movimentação encontrada neste período.</td
-                    ></tr
-                  >{/each}</tbody
-              >
-            </table>
-          </div>
-        </section>
+        <TransactionActivity
+          dashboard={d}
+          overview={data.section === ''}
+          {hidden}
+        />
       {/if}
 
       {#if data.section === 'orcamento'}<section class="panel">

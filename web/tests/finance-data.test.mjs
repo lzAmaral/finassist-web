@@ -62,7 +62,7 @@ test('card purchases use direction, and refunds reduce expense rather than creat
   assert.equal(result.summary.current.income, 0);
   assert.equal(result.summary.bankBalance, 100);
 });
-test('own transfers, investments and bill settlements stay visible without double counting', () => {
+test('own transfers, investments and bill settlements remain in source data without double counting', () => {
   const result = dashboardFromSnapshot(
     snapshot([
       tx({ id: 'own', category: 'Same person transfer - PIX' }),

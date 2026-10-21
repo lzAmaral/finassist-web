@@ -153,7 +153,7 @@
     </div>
   </aside>
 
-  <main>
+  <main class:investment-page={data.section === 'investimentos'}>
     <header class="topbar">
       <div>
         <span class="breadcrumb">Meu espaço <span>/</span> {title}</span>

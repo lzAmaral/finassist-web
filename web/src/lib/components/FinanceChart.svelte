@@ -8,13 +8,15 @@
     rows,
     series,
     hidden = false,
-    label = 'Gráfico financeiro'
+    label = 'Gráfico financeiro',
+    palette
   }: {
     kind?: 'bars' | 'area' | 'donut';
     rows: Record<string, string | number>[];
     series: { key: string; label: string; color: string }[];
     hidden?: boolean;
     label?: string;
+    palette?: string[];
   } = $props();
   let config = $derived(
     Object.fromEntries(
@@ -47,7 +49,7 @@
           value="value"
           label="label"
           c="label"
-          cRange={colors}
+          cRange={palette ?? colors}
           innerRadius={0.72}
           padAngle={0.02}
           cornerRadius={3}

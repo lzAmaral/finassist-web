@@ -7,8 +7,7 @@ const proxy: RequestHandler = async ({ request, url, params }) => {
   if (!base)
     return json(
       {
-        error:
-          'Esta versão está em demonstração. A API real ainda não foi configurada.'
+        error: 'A conexão com seus dados ainda não foi configurada.'
       },
       { status: 503 }
     );

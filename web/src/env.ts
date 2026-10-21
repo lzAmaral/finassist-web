@@ -6,6 +6,6 @@ export const variables = defineEnvVars({
     static: false,
     schema: (value: string | undefined) => value || undefined,
     description:
-      'Origem privada do backend Go; ausente habilita apenas a demonstração.'
+      'Origem privada do backend Go; ausente mantém o painel vazio, sem dados financeiros.'
   }
 });

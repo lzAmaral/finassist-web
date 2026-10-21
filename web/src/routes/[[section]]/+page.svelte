@@ -58,7 +58,8 @@
         : '#e8eee9 0% 100%'
     })`;
   });
-  const display = (n: number) => (hidden ? '••••••' : money(n));
+  const display = (n: number) =>
+    d.mode === 'unconfigured' ? '—' : hidden ? '••••••' : money(n);
   function exportCSV() {
     const cell = (v: unknown) => {
       const s = String(v);
@@ -131,12 +132,12 @@
       >
     </div>
     <div class="profile">
-      <span class="avatar">{d.mode === 'demo' ? 'D' : 'L'}</span>
+      <span class="avatar">{d.mode === 'unconfigured' ? 'F' : 'L'}</span>
       <div>
-        <strong
-          >{d.mode === 'demo' ? 'Explorar demonstração' : 'Meu espaço'}</strong
-        ><small
-          >{d.mode === 'demo' ? 'Dados fictícios' : 'Sessão autenticada'}</small
+        <strong>Meu espaço</strong><small
+          >{d.mode === 'unconfigured'
+            ? 'Conexão pendente'
+            : 'Sessão autenticada'}</small
         >
       </div>
       {#if d.mode === 'live'}<button
@@ -154,10 +155,12 @@
       </div>
       <div class="topbar-right">
         <span class="status-pill"
-          ><span></span>{d.mode === 'demo'
-            ? 'Modo demonstração'
+          ><span></span>{d.mode === 'unconfigured'
+            ? 'Aguardando conexão'
             : 'Conectado à sua API'}</span
-        ><span class="avatar small">{d.mode === 'demo' ? 'D' : 'L'}</span>
+        ><span class="avatar small"
+          >{d.mode === 'unconfigured' ? 'F' : 'L'}</span
+        >
       </div>
     </header>
     <div class="main-content">
@@ -187,10 +190,10 @@
           >
         </div>
       </div>
-      {#if d.mode === 'demo'}<div class="demo-banner">
+      {#if d.mode === 'unconfigured'}<div class="connection-banner">
           <span
-            ><strong>Conheça o seu novo espaço.</strong> Todos os valores desta versão
-            são fictícios.</span
+            ><strong>Seu painel está pronto para receber seus dados.</strong> Conecte
+            sua instalação e seus bancos para acompanhar saldos e gastos.</span
           ><a href="/conexoes">Como conectar meus bancos <span>↗</span></a>
         </div>{/if}
 
@@ -211,8 +214,8 @@
                 : display(d.summary.bankBalance)}
             </div>
             <div class="metric-foot">
-              <span class="tiny-dot"></span>{d.mode === 'demo'
-                ? '2 contas de demonstração'
+              <span class="tiny-dot"></span>{d.mode === 'unconfigured'
+                ? 'Aguardando suas contas'
                 : `${d.balances.institutions.length} instituições`}
             </div>
             <span class="balance-decoration" aria-hidden="true">↗</span>
@@ -245,87 +248,99 @@
             <div class="metric-foot">Entradas menos saídas</div>
           </article>
         </section>
-        <div class="charts-grid">
-          <section class="panel cashflow">
-            <div class="panel-heading">
-              <div>
-                <h2>Seu dinheiro ao longo do tempo</h2>
-                <p>Entradas e saídas, mês a mês</p>
-              </div>
-              <span class="subtle-tag">Últimos 6 meses</span>
-            </div>
-            <div class="chart-legend">
-              <span><i style="background:#56866d"></i>Entradas</span><span
-                ><i style="background:#d1dac6"></i>Saídas</span
-              >
-            </div>
-            <div
-              class="bar-chart"
-              role="img"
-              aria-label="Gráfico de entradas e saídas dos últimos seis meses"
-            >
-              <div class="chart-gridlines">
-                <span>{hidden ? '••••' : money(maxBar)}</span><span
-                  >{hidden ? '••••' : money(maxBar / 2)}</span
-                ><span>R$ 0</span>
-              </div>
-              <div class="bars">
-                {#each d.series as point}<div class="bar-group">
-                    <div class="bar-pair">
-                      <div
-                        class="bar income-bar"
-                        style={`height:${percent(point.income, maxBar)}%`}
-                        title={`Entradas: ${display(point.income)}`}
-                      ></div>
-                      <div
-                        class="bar expense-bar"
-                        style={`height:${percent(point.expense, maxBar)}%`}
-                        title={`Saídas: ${display(point.expense)}`}
-                      ></div>
-                    </div>
-                    <span
-                      >{new Date(`${point.month.slice(0, 7)}-15T12:00:00Z`)
-                        .toLocaleDateString('pt-BR', {
-                          month: 'short',
-                          timeZone: 'UTC'
-                        })
-                        .replace('.', '')}</span
-                    >
-                  </div>{/each}
-              </div>
-            </div>
-            <div class="chart-note">
-              <span class="green-text">↗</span> Acompanhar seus hábitos é o primeiro
-              passo para planejar melhor.
-            </div>
-          </section>
-          <section class="panel categories-panel">
-            <div class="panel-heading">
-              <div>
-                <h2>Para onde foi?</h2>
-                <p>Despesas por categoria</p>
-              </div>
-              <Icon name="chart" size={18} />
-            </div>
-            <div class="donut-wrap">
-              <div class="donut" style={`background:${donut}`}>
+        {#if d.mode === 'live'}<div class="charts-grid">
+            <section class="panel cashflow">
+              <div class="panel-heading">
                 <div>
-                  <small>Total de saídas</small><strong
-                    >{display(d.summary.current.expense)}</strong
-                  >
+                  <h2>Seu dinheiro ao longo do tempo</h2>
+                  <p>Entradas e saídas, mês a mês</p>
+                </div>
+                <span class="subtle-tag">Últimos 6 meses</span>
+              </div>
+              <div class="chart-legend">
+                <span><i style="background:#56866d"></i>Entradas</span><span
+                  ><i style="background:#d1dac6"></i>Saídas</span
+                >
+              </div>
+              <div
+                class="bar-chart"
+                role="img"
+                aria-label="Gráfico de entradas e saídas dos últimos seis meses"
+              >
+                <div class="chart-gridlines">
+                  <span>{hidden ? '••••' : money(maxBar)}</span><span
+                    >{hidden ? '••••' : money(maxBar / 2)}</span
+                  ><span>R$ 0</span>
+                </div>
+                <div class="bars">
+                  {#each d.series as point}<div class="bar-group">
+                      <div class="bar-pair">
+                        <div
+                          class="bar income-bar"
+                          style={`height:${percent(point.income, maxBar)}%`}
+                          title={`Entradas: ${display(point.income)}`}
+                        ></div>
+                        <div
+                          class="bar expense-bar"
+                          style={`height:${percent(point.expense, maxBar)}%`}
+                          title={`Saídas: ${display(point.expense)}`}
+                        ></div>
+                      </div>
+                      <span
+                        >{new Date(`${point.month.slice(0, 7)}-15T12:00:00Z`)
+                          .toLocaleDateString('pt-BR', {
+                            month: 'short',
+                            timeZone: 'UTC'
+                          })
+                          .replace('.', '')}</span
+                      >
+                    </div>{/each}
                 </div>
               </div>
-            </div>
-            <div class="category-list">
-              {#each d.breakdown.slice(0, 5) as item, i}<div>
-                  <span
-                    ><i style={`background:${colors[i % colors.length]}`}
-                    ></i>{item.label}</span
-                  ><strong>{display(item.total)}</strong>
-                </div>{/each}
-            </div>
-          </section>
-        </div>
+              <div class="chart-note">
+                <span class="green-text">↗</span> Acompanhar seus hábitos é o primeiro
+                passo para planejar melhor.
+              </div>
+            </section>
+            <section class="panel categories-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Para onde foi?</h2>
+                  <p>Despesas por categoria</p>
+                </div>
+                <Icon name="chart" size={18} />
+              </div>
+              <div class="donut-wrap">
+                <div class="donut" style={`background:${donut}`}>
+                  <div>
+                    <small>Total de saídas</small><strong
+                      >{display(d.summary.current.expense)}</strong
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="category-list">
+                {#each d.breakdown.slice(0, 5) as item, i}<div>
+                    <span
+                      ><i style={`background:${colors[i % colors.length]}`}
+                      ></i>{item.label}</span
+                    ><strong>{display(item.total)}</strong>
+                  </div>{/each}
+              </div>
+            </section>
+          </div>{:else}<section
+            class="panel empty-state"
+            style="margin-bottom:23px"
+          >
+            <h2>Ainda não há dados financeiros</h2>
+            <p style="margin:12px 0 20px">
+              Seus gráficos aparecerão após conectar suas contas e sincronizar
+              as primeiras movimentações.
+            </p>
+            <a class="primary-button" href="/conexoes"
+              >Como conectar meus bancos →</a
+            >
+          </section>{/if}
       {/if}
 
       {#if data.section === '' || data.section === 'transacoes'}
@@ -348,7 +363,10 @@
                 class="text-link"
                 href={`/transacoes?month=${d.month}`}
                 >Ver todas <span>↗</span></a
-              >{:else}<button class="secondary-button" onclick={exportCSV}
+              >{:else}<button
+                class="secondary-button"
+                onclick={exportCSV}
+                disabled={filtered.length === 0}
                 ><Icon name="download" size={16} />Exportar CSV</button
               >{/if}
           </div>
@@ -483,8 +501,8 @@
               <div>
                 <h2>Minhas contas</h2>
                 <p>
-                  {d.mode === 'demo'
-                    ? 'Exemplos para conhecer o painel'
+                  {d.mode === 'unconfigured'
+                    ? 'Nenhuma conexão configurada'
                     : 'Dados recebidos da sua API'}
                 </p>
               </div>
@@ -500,9 +518,7 @@
                   <strong>{bank.name}</strong><small
                     >{bank.accounts.length} conta(s) · {bank.stale
                       ? 'Atualização pendente'
-                      : d.mode === 'demo'
-                        ? 'Fictícia'
-                        : 'Sincronizada'}</small
+                      : 'Sincronizada'}</small
                   >
                 </div>
                 <strong
@@ -536,8 +552,8 @@
               rel="noreferrer">Ver instruções de conexão ↗</a
             >
             <p class="fine-print">
-              {d.mode === 'demo'
-                ? 'Esta demonstração pública não acessa suas contas.'
+              {d.mode === 'unconfigured'
+                ? 'Suas contas ainda não estão conectadas.'
                 : 'Novas conexões são configuradas no painel original.'}
             </p>
           </section>

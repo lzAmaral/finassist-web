@@ -75,9 +75,9 @@
       <a class="text-link" href="/setup"
         >Primeiro acesso? Configurar instalação ↗</a
       >{:else}<p class="error">
-        Esta publicação está em demonstração. A conexão com um backend ainda não
-        foi configurada.
+        O acesso estará disponível quando a conexão com sua instalação estiver
+        configurada.
       </p>
-      <a class="primary-button" href="/">Explorar demonstração →</a>{/if}
+      <a class="primary-button" href="/">Voltar ao painel →</a>{/if}
   </div>
 </div>

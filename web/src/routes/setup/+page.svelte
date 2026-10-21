@@ -158,10 +158,10 @@
           >{busy ? 'Aguarde...' : actions[phase]}</button
         >
       </form>{:else}<p class="error">
-        A demonstração pública não está conectada ao seu backend. Configure
-        FINASSIST_API_URL no servidor para habilitar o primeiro acesso.
+        Sua instalação ainda não está conectada. O primeiro acesso ficará
+        disponível após configurar essa conexão.
       </p>
-      <a class="primary-button" href="/">Explorar demonstração →</a>{/if}<a
+      <a class="primary-button" href="/">Voltar ao painel →</a>{/if}<a
       class="text-link"
       href="/login">Já configurei minha instalação →</a
     >

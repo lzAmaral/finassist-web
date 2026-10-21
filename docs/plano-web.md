@@ -37,3 +37,7 @@ Criar uma experiência web em português com SvelteKit, mantendo as regras finan
 Componentes apresentam dados; módulos de aplicação organizam fluxos; adaptadores de API concentram chamadas externas. Totais, classificação e conciliação continuam no Go. Cada nova integração deve ter contrato explícito e permitir substituição sem reescrever a interface.
 
 O backend atual é de uso pessoal. Não disponibilizar os dados de uma instalação como um serviço público para múltiplos usuários sem projetar isolamento e autenticação adequados.
+
+## Atualização — remoção dos dados de exemplo
+
+A publicação passou a apresentar um painel vazio enquanto a conexão estiver pendente. Os saldos, transações, contas e metas fictícios foram removidos do frontend. A ausência de conexão não é apresentada como saldo zero nem como sessão autenticada.

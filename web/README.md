@@ -9,7 +9,7 @@ npm ci
 npm run dev -- --host 127.0.0.1
 ```
 
-Sem variáveis de ambiente, o app exibe **somente dados fictícios**, sem persistência. Os filtros e a exportação funcionam sobre esses exemplos. Não há autenticação nem conexão bancária no modo de demonstração.
+Sem `FINASSIST_API_URL`, o app exibe um **painel vazio com conexão pendente**. Nenhum saldo, lançamento, conta ou meta é gerado. Valores desconhecidos aparecem como travessão, e a exportação fica desabilitada enquanto a lista estiver vazia.
 
 ## Conectar o backend real
 
@@ -23,15 +23,15 @@ O modo real nunca substitui falhas de conexão por dados fictícios. Ele usa as 
 ## Arquitetura
 
 - `src/lib/finance.ts`: contratos e formatação para apresentação.
-- `src/lib/server/demo.ts`: dados fictícios determinísticos, exclusivos da demonstração.
+- `src/lib/server/empty.ts`: estado vazio quando a conexão ainda não foi configurada.
 - `src/lib/server/backend.ts`: configuração privada da origem da API.
 - `src/routes/api/[...path]/+server.ts`: proxy com validação de origem para escritas, cookies HttpOnly e respostas sem cache.
-- `src/routes/[[section]]/+page.server.ts`: carregamento autenticado dos dados reais ou seleção explícita da demonstração.
+- `src/routes/[[section]]/+page.server.ts`: carregamento autenticado dos dados reais ou estado de conexão pendente.
 - As regras financeiras reais continuam no backend Go. O navegador não recebe chaves Pluggy nem conexão PostgreSQL.
 
 ## Publicar na Vercel
 
-Use `web` como **Root Directory**, framework SvelteKit, Node.js 24, instalação `npm ci` e build `npm run build`. Sem `FINASSIST_API_URL`, a publicação permanece em demonstração. Para modo real, configure uma origem HTTPS de backend persistente acessível pela Vercel; `localhost` na Vercel não aponta para o computador do desenvolvedor.
+Use `web` como **Root Directory**, framework SvelteKit, Node.js 24, instalação `npm ci` e build `npm run build`. Sem `FINASSIST_API_URL`, a publicação permanece vazia, aguardando conexão. Para modo real, configure uma origem HTTPS de backend persistente acessível pela Vercel; `localhost` na Vercel não aponta para o computador do desenvolvedor.
 
 O backend atual mantém jobs e canais de conversa, por isso exige um serviço de containers/VM separado. O PostgreSQL local atende ao desenvolvimento. Supabase é opcional como PostgreSQL gerenciado: as tabelas financeiras devem ficar em esquema privado, fora do Data API, ou ter RLS revisado antes de qualquer exposição. Não habilite acesso direto do navegador às tabelas herdadas.
 

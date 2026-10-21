@@ -302,7 +302,7 @@ main {
   line-height: 25px;
   padding: 0 5px;
 }
-.demo-banner {
+.connection-banner {
   display: flex;
   justify-content: space-between;
   gap: 15px;
@@ -315,16 +315,16 @@ main {
   margin-bottom: 24px;
   line-height: 1.7;
 }
-.demo-banner strong {
+.connection-banner strong {
   color: #60724e;
   font-weight: 600;
 }
-.demo-banner a {
+.connection-banner a {
   color: #5a744c;
   font-weight: 600;
   white-space: nowrap;
 }
-.demo-banner a span {
+.connection-banner a span {
   padding-left: 8px;
 }
 .metrics {
@@ -1128,10 +1128,10 @@ footer .green-text {
   .charts-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .demo-banner {
+  .connection-banner {
     font-size: 9px;
   }
-  .demo-banner a {
+  .connection-banner a {
     white-space: normal;
     max-width: 145px;
   }
@@ -1285,12 +1285,12 @@ footer .green-text {
   .month-picker span {
     min-width: 115px;
   }
-  .demo-banner {
+  .connection-banner {
     flex-direction: column;
     gap: 6px;
     padding: 12px;
   }
-  .demo-banner a {
+  .connection-banner a {
     max-width: none;
   }
   .metrics {
@@ -1419,4 +1419,9 @@ footer .green-text {
   .goal-amount {
     font-size: 20px;
   }
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

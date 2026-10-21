@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { Dashboard } from '#lib/finance.js';
 import { shiftMonth } from '#lib/finance.js';
-import { demoDashboard } from '#lib/server/demo.js';
+import { emptyDashboard } from '#lib/server/empty.js';
 import { backendURL } from '#lib/server/backend.js';
 
 export const load: PageServerLoad = async ({
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({
     ? candidate
     : current;
   setHeaders({ 'cache-control': 'private, no-store' });
-  if (!backendURL()) return { section, dashboard: demoDashboard(month) };
+  if (!backendURL()) return { section, dashboard: emptyDashboard(month) };
   const get = async (path: string) => {
     const res = await fetch(`/api/${path}`);
     if (res.status === 401) redirect(303, '/login');

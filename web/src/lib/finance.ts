@@ -16,7 +16,7 @@ export interface Totals {
   expense: number;
 }
 export interface Dashboard {
-  mode: 'demo' | 'live';
+  mode: 'unconfigured' | 'live';
   month: string;
   summary: { current: Totals; previous: Totals; bankBalance: number | null };
   transactions: { items: Transaction[]; total: number };

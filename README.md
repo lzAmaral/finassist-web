@@ -1,5 +1,7 @@
 # FinAssist — seu assistente financeiro pessoal
 
+> **FinAssist Web, por Luiz Amaral:** evolução independente do [projeto original de Marcos Antônio Albano Júnior](https://github.com/MarcosAAlbanoJunior/go-financial-assistant), preservando a licença MIT e os créditos. O plano para o novo frontend SvelteKit e implantação está em [docs/plano-web.md](docs/plano-web.md). As instruções abaixo descrevem a aplicação original, que continua disponível.
+
 Conecte seus bancos pelo **Open Finance**, converse com o seu próprio **bot no Telegram** e acompanhe tudo num **dashboard** no navegador. Roda no seu computador ou servidor, com os seus dados no seu banco de dados.
 
 ```

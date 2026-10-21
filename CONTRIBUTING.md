@@ -1,5 +1,9 @@
 # Contribuindo
 
+## Branches e publicação
+
+Trabalhe em `dev`. Mudanças chegam à produção por PR de `dev` para `main`, com CI obrigatório e deploy automático na Vercel. Não faça push direto em `main`. Use `gh -R lzAmaral/finassist-web` para evitar operar no upstream. Veja o [fluxo de CI/CD](docs/ci-cd.md), incluindo sincronização após merge e isolamento dos ambientes.
+
 ## Rodar tudo localmente
 
 ```bash

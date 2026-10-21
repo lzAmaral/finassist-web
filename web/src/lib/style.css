@@ -80,6 +80,23 @@ h2 {
   flex-direction: column;
   z-index: 10;
 }
+.mobile-navigation {
+  display: none;
+}
+.sidebar > nav {
+  min-height: 0;
+  overflow-y: auto;
+  flex-shrink: 1;
+}
+.sidebar > .brand,
+.sidebar > .profile {
+  flex-shrink: 0;
+}
+@media (min-width: 601px) and (max-height: 950px) {
+  .sidebar-bottom {
+    display: none;
+  }
+}
 .brand {
   display: flex;
   align-items: center;
@@ -1226,24 +1243,30 @@ footer .green-text {
     display: none;
   }
   .sidebar nav {
-    margin: 0;
+    display: none;
+  }
+  .mobile-navigation {
     display: flex;
-    justify-content: space-around;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    gap: 0;
+    height: 100%;
+    padding: 8px 16px;
   }
-  .sidebar nav a {
-    border-radius: 0;
+  .mobile-navigation label {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .mobile-navigation select {
     flex: 1;
-    padding: 20px 10px;
-  }
-  .sidebar nav a.active {
-    background: #eef3e7;
-    border-top: 2px solid #779268;
-  }
-  .sidebar nav a svg {
-    width: 20px;
-    height: 20px;
+    min-width: 0;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 8px;
+    background: white;
+    font: inherit;
+    font-size: 13px;
   }
   main {
     margin: 0;

@@ -1,10 +1,11 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { Dashboard } from '#lib/finance.js';
-import { shiftMonth } from '#lib/finance.js';
-import { emptyDashboard } from '#lib/server/empty.js';
+import { loadDashboardPage } from '#lib/server/dashboard-page.js';
 import { backendURL } from '#lib/server/backend.js';
-import { cloudConfigured } from '#lib/server/cloud-config.js';
+import {
+  cloudConfigured,
+  privateStorageConfigured
+} from '#lib/server/cloud-config.js';
 
 export const load: PageServerLoad = async ({
   url,
@@ -21,7 +22,13 @@ export const load: PageServerLoad = async ({
       'metas',
       'conexoes',
       'investimentos',
-      'analise'
+      'analise',
+      'cartoes',
+      'classificar',
+      'revisao',
+      'notificacoes',
+      'importar',
+      'perguntas'
     ].includes(section)
   )
     error(404, 'Página não encontrada.');
@@ -35,59 +42,18 @@ export const load: PageServerLoad = async ({
     ? candidate
     : current;
   setHeaders({ 'cache-control': 'private, no-store' });
-  const cloud = !backendURL() && cloudConfigured();
-  if (!backendURL() && !cloud)
-    return { section, dashboard: emptyDashboard(month) };
-  const get = async (path: string) => {
-    const res = await fetch(`/api/${path}`);
-    if (res.status === 401) redirect(303, '/login');
-    if (res.status === 409) redirect(303, '/setup');
-    if (!res.ok)
-      error(502, 'A API não respondeu. Confira a conexão com o backend.');
-    return res.json();
-  };
-  await get('me');
-  if (cloud)
-    return {
-      section,
-      dashboard: (await get(`dashboard?month=${month}`)) as Dashboard,
-      portfolio:
-        section === 'investimentos'
-          ? ((await get(
-              `portfolio?month=${month}`
-            )) as import('#lib/investments.js').Portfolio)
-          : null,
-      ai:
-        section === 'analise'
-          ? ((await get(`analysis?month=${month}`)) as {
-              configured: boolean;
-              analysis: import('#lib/analysis.js').GeminiAnalysis | null;
-              model: string;
-            })
-          : null
-    };
-  const [summary, transactions, breakdown, series, balances, budget, goals] =
-    await Promise.all([
-      get(`summary?month=${month}`),
-      get(`transactions?month=${month}&limit=100`),
-      get(`breakdown?month=${month}&by=category`),
-      get(`timeseries?from=${shiftMonth(month, -5)}&to=${month}`),
-      get('balances'),
-      get(`budget?month=${month}`),
-      get('goals')
-    ]);
-  return {
+  const mode = backendURL()
+    ? 'go'
+    : cloudConfigured()
+      ? 'cloud'
+      : 'unconfigured';
+  const result = await loadDashboardPage({
+    mode,
+    month,
     section,
-    dashboard: {
-      mode: 'live',
-      month,
-      summary,
-      transactions,
-      breakdown,
-      series,
-      balances,
-      budget,
-      goals
-    } as Dashboard
-  };
+    privateStorage: privateStorageConfigured(),
+    fetchAPI: (path) => fetch(`/api/${path}`)
+  });
+  if (result.redirectTo) redirect(303, result.redirectTo);
+  return result;
 };

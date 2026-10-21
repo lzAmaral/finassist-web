@@ -60,7 +60,7 @@ export async function writeSnapshot(value: Snapshot, etag?: string) {
       access: 'private',
       token: c.blobToken,
       addRandomSuffix: false,
-      ...(etag ? { ifMatch: etag } : {}),
+      ...(etag ? { ifMatch: etag, allowOverwrite: true } : {}),
       contentType: 'application/octet-stream',
       cacheControlMaxAge: 60
     }

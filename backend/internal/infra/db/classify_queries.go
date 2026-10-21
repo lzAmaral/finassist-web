@@ -16,7 +16,7 @@ func (r *ClassifyRepo) UncategorizedExpenses(ctx context.Context, limit int) ([]
 			       COUNT(*) AS n, SUM(pay.amount) AS total, MAX(` + txDate + `) AS last
 			FROM payments pay
 			JOIN purchases p ON p.id = pay.purchase_id
-			WHERE p.kind = 'EXPENSE' AND p.category = 'OTHER' AND pay.status != 'CANCELLED' AND p.description IS NOT NULL
+			WHERE p.kind = 'EXPENSE' AND effective_payment_category(pay.id, p.category) = 'OTHER' AND NOT EXISTS (SELECT 1 FROM payment_category_overrides o WHERE o.payment_id = pay.id) AND pay.status != 'CANCELLED' AND p.description IS NOT NULL
 			GROUP BY 1
 		)
 		SELECT key, label, n, total, last FROM g

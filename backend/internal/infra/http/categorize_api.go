@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/usecase/coach"
@@ -79,10 +80,16 @@ func (a *api) categorize(w http.ResponseWriter, r *http.Request) {
 // setCategoryRule classifica uma conta: reclassifica as despesas dela que estavam em Outros e vale para as próximas.
 func (a *api) setCategoryRule(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Key      string `json:"key"`
-		Category string `json:"category"`
+		Key           string `json:"key"`
+		Category      string `json:"category"`
+		ApplyExisting bool   `json:"applyExisting"`
+		PreviewHash   string `json:"previewHash"`
 	}
-	if !decodeJSON(w, r, maxRuleBody, &body) {
+	if !decodeJSON(w, r, maxCategoryReviewBody, &body) {
+		return
+	}
+	if strings.HasPrefix(body.Key, "exact:") {
+		a.applyExactCategoryRule(w, r, body.Key, body.Category, body.ApplyExisting, body.PreviewHash)
 		return
 	}
 	if !ruleKeyRE.MatchString(body.Key) {
@@ -153,6 +160,11 @@ func (a *api) suggestCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) registerCategorize(rt routes) {
+	rt.mux.Handle("GET /api/categorize/review", rt.protected(a.categoryReview))
+	rt.mux.Handle("POST /api/categorize/preview", rt.protected(jsonOnly(a.previewExactCategoryRule)))
+	rt.mux.Handle("GET /api/categorize/transactions/{id}", rt.protected(a.categoryTransaction))
+	rt.mux.Handle("PUT /api/categorize/transactions/{id}", rt.protected(jsonOnly(a.setTransactionCategory)))
+	rt.mux.Handle("DELETE /api/categorize/rules", rt.protected(a.removeCategoryRule))
 	rt.mux.Handle("GET /api/categorize", rt.protected(a.categorize))
 	rt.mux.Handle("PUT /api/categorize/rules", rt.protected(jsonOnly(a.setCategoryRule)))
 	rt.mux.Handle("POST /api/categorize/suggest", newIPRateLimiter(3, time.Minute).middleware(rt.protected(jsonOnly(a.suggestCategories))))

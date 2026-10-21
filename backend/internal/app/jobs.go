@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/config"
 	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/domain/ports"
 	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/usecase/insights"
 	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/usecase/ledger"
@@ -30,7 +31,14 @@ func (a *app) startJobs() {
 			a.logger.Error("erro ao enviar aviso de segurança", "error", err)
 		}
 	}
-	go insights.NewDigestJob(a.insights, &a.channel, "", a.logger, a.settings.Digest, a.onChange()).Run(a.ctx)
+	// WhatsApp conserva o resumo anterior; o novo serviço só entrega externamente pelo Telegram.
+	if a.cfg.Channel == config.ChannelWhatsApp {
+		schedule := func() (bool, time.Weekday, int, *time.Location) {
+			enabled, weekday, hour, loc := a.settings.Digest()
+			return enabled && a.settings.Get("CHANNEL") == config.ChannelWhatsApp, weekday, hour, loc
+		}
+		go insights.NewDigestJob(a.insights, &a.channel, "", a.logger, schedule, a.onChange()).Run(a.ctx)
+	}
 	go a.runDaily(ledger.NewMonthlyReport(a.exportCSV, &a.channel, "", a.logger))
 }
 

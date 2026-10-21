@@ -67,6 +67,9 @@ type APIError struct {
 	Code        int
 }
 
+// DeliveryRejected permite retentar só quando a API confirmou que recusou o envio.
+func (e *APIError) DeliveryRejected() bool { return true }
+
 func (e *APIError) Error() string {
 	return fmt.Sprintf("telegram %s: %s (código %d)", e.Method, e.Description, e.Code)
 }

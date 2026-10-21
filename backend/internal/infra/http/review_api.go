@@ -28,18 +28,20 @@ func (a *api) review(w http.ResponseWriter, r *http.Request) {
 		Values        []float64 `json:"values"`
 	}
 	type candidate struct {
-		Kind          string   `json:"kind"`
-		Key           string   `json:"key"`
-		Label         string   `json:"label"`
-		Category      string   `json:"category"`
-		CategoryLabel string   `json:"categoryLabel"`
-		Monthly       float64  `json:"monthly"`
-		Annual        *float64 `json:"annual"` // nulo nas avulsas (duplicata, conta nova)
-		Amount        float64  `json:"amount"`
-		Baseline      float64  `json:"baseline"`
-		Count         int      `json:"count"`
-		Months        int      `json:"months"`
-		Dismissed     bool     `json:"dismissed"`
+		Kind          string                `json:"kind"`
+		Key           string                `json:"key"`
+		Label         string                `json:"label"`
+		Category      string                `json:"category"`
+		CategoryLabel string                `json:"categoryLabel"`
+		Monthly       float64               `json:"monthly"`
+		Annual        *float64              `json:"annual"` // nulo nas avulsas (duplicata, conta nova)
+		Amount        float64               `json:"amount"`
+		Baseline      float64               `json:"baseline"`
+		Count         int                   `json:"count"`
+		Months        int                   `json:"months"`
+		Dismissed     bool                  `json:"dismissed"`
+		Evidence      []review.Evidence     `json:"evidence"`
+		History       []review.HistoryMonth `json:"history"`
 	}
 	months := make([]string, len(rev.Months))
 	for i, m := range rev.Months {
@@ -55,14 +57,14 @@ func (a *api) review(w http.ResponseWriter, r *http.Request) {
 		if c.Label == "" {
 			c.Label = label
 		}
-		out := candidate{c.Kind, c.Key, c.Label, c.Category, label, c.Saving, nil, c.Amount, c.Baseline, c.Count, c.Months, c.Dismissed}
+		out := candidate{c.Kind, c.Key, c.Label, c.Category, label, c.Saving, nil, c.Amount, c.Baseline, c.Count, c.Months, c.Dismissed, c.Evidence, c.History}
 		if c.Recurring {
 			annual := c.Saving * 12
 			out.Annual = &annual
 		}
 		candidates[i] = out
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"month": formatMonth(to), "months": months, "matrix": matrix, "candidates": candidates})
+	writeJSON(w, http.StatusOK, map[string]any{"month": formatMonth(to), "months": months, "matrix": matrix, "candidates": candidates, "historyMonths": rev.HistoryMonths})
 }
 
 var dismissalKeyRE = regexp.MustCompile(`^[A-Za-zà-ÿ_ ]{1,120}$`)

@@ -65,12 +65,27 @@ type Candidate struct {
 	Count     int     // lançamentos no mês (formiga e duplicata)
 	Months    int     // há quantos meses a conta se repete (fixas)
 	Dismissed bool
+	Evidence  []Evidence
+	History   []HistoryMonth
+}
+
+type Evidence struct {
+	ID     string  `json:"id"`
+	Date   string  `json:"date"`
+	Label  string  `json:"label"`
+	Amount float64 `json:"amount"`
+}
+
+type HistoryMonth struct {
+	Month  string  `json:"month"`
+	Amount float64 `json:"amount"`
 }
 
 type Review struct {
-	Months     []time.Time
-	Matrix     []ReviewRow
-	Candidates []Candidate
+	HistoryMonths int
+	Months        []time.Time
+	Matrix        []ReviewRow
+	Candidates    []Candidate
 }
 
 // BuildReview roda os detectores sobre o mês to (primeiro dia). catMonths cobre os meses da matriz,
@@ -81,6 +96,13 @@ func BuildReview(catMonths []domain.CategoryMonth, keyRows []domain.ExpenseKeyMo
 	budget := planning.BuildBudget(keyRows, rules, to.AddDate(0, -(BudgetMonths-1), 0), to)
 
 	r := Review{}
+	history := map[time.Time]bool{}
+	for _, row := range catMonths {
+		if row.Month.Before(to) && row.Total > 0 {
+			history[row.Month] = true
+		}
+	}
+	r.HistoryMonths = len(history)
 	for m := from; !m.After(to); m = m.AddDate(0, 1, 0) {
 		r.Months = append(r.Months, m)
 	}
@@ -99,6 +121,40 @@ func BuildReview(catMonths []domain.CategoryMonth, keyRows []domain.ExpenseKeyMo
 	for i := range r.Candidates {
 		c := &r.Candidates[i]
 		c.Dismissed = off[domain.Dismissal{Kind: c.Kind, Key: c.Key}]
+		if c.Kind != ReviewDuplicate {
+			for _, p := range payments {
+				match := p.Key == c.Key
+				if c.Kind == ReviewIncrease {
+					match = p.Category == c.Category
+				}
+				if c.Kind == ReviewAnt {
+					match = match && p.Amount <= maxAntAmount && p.PaymentMethod != "PIX"
+				}
+				if match {
+					c.Evidence = append(c.Evidence, paymentEvidence(p))
+				}
+			}
+		}
+		if c.Kind == ReviewIncrease {
+			for _, m := range r.Months {
+				if !baselineMonths(r.Matrix, r.Months)[m] {
+					continue
+				}
+				var total float64
+				for _, row := range catMonths {
+					if row.Category == c.Category && row.Month.Equal(m) {
+						total += row.Total
+					}
+				}
+				c.History = append(c.History, HistoryMonth{m.Format("2006-01"), total})
+			}
+		} else {
+			for _, row := range keyRows {
+				if row.Key == c.Key && !row.Month.After(to) {
+					c.History = append(c.History, HistoryMonth{row.Month.Format("2006-01"), row.Total})
+				}
+			}
+		}
 	}
 	// As que se repetem todo mês primeiro, pelo custo no ano; as avulsas depois, pelo valor.
 	sort.SliceStable(r.Candidates, func(i, j int) bool {
@@ -232,9 +288,10 @@ func duplicates(payments []domain.ExpensePayment, classes map[string]domain.Expe
 		amount float64
 	}
 	type run struct {
-		first domain.ExpensePayment
-		last  time.Time
-		count int
+		first    domain.ExpensePayment
+		evidence []Evidence
+		last     time.Time
+		count    int
 	}
 	open := map[id]*run{}
 	var found []*run
@@ -245,10 +302,11 @@ func duplicates(payments []domain.ExpensePayment, classes map[string]domain.Expe
 		k := id{p.Key, p.Amount}
 		if r := open[k]; r != nil && p.Date.Sub(r.last) <= maxDuplicateDays*24*time.Hour {
 			r.count++
+			r.evidence = append(r.evidence, paymentEvidence(p))
 			r.last = p.Date
 			continue
 		}
-		r := &run{first: p, last: p.Date, count: 1}
+		r := &run{first: p, last: p.Date, count: 1, evidence: []Evidence{paymentEvidence(p)}}
 		open[k] = r
 		found = append(found, r)
 	}
@@ -256,7 +314,7 @@ func duplicates(payments []domain.ExpensePayment, classes map[string]domain.Expe
 	for _, r := range found {
 		if r.count > 1 {
 			out = append(out, Candidate{Kind: ReviewDuplicate, Key: r.first.Key, Label: r.first.Label, Category: r.first.Category,
-				Saving: r.first.Amount * float64(r.count-1), Amount: r.first.Amount, Count: r.count})
+				Saving: r.first.Amount * float64(r.count-1), Amount: r.first.Amount, Count: r.count, Evidence: r.evidence})
 		}
 	}
 	return out
@@ -280,4 +338,21 @@ func newBills(b planning.Budget, keyRows []domain.ExpenseKeyMonth, to time.Time)
 		}
 	}
 	return out
+}
+
+func paymentEvidence(p domain.ExpensePayment) Evidence {
+	return Evidence{ID: p.ID, Date: p.Date.Format("2006-01-02"), Label: p.Label, Amount: p.Amount}
+}
+
+func baselineMonths(matrix []ReviewRow, months []time.Time) map[time.Time]bool {
+	selected := map[time.Time]bool{}
+	for i := len(months) - 2; i >= 0 && len(selected) < increaseBaselineMonths; i-- {
+		for _, row := range matrix {
+			if row.Values[i] > 0 {
+				selected[months[i]] = true
+				break
+			}
+		}
+	}
+	return selected
 }

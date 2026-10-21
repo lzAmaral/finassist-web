@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/usecase/notifications"
 	"log/slog"
 	"sync/atomic"
 	"time"
@@ -42,6 +43,7 @@ type app struct {
 	analyzeExpense *ledger.AnalyzeExpense
 	exportCSV      *ledger.ExportCSV
 	insights       *insights.Insights
+	notifications  *notifications.Service
 	syncer         *openfinance.SyncOpenFinance
 	server         *httpserver.Server
 	settingsDeps   *httpserver.SettingsDeps
@@ -72,6 +74,8 @@ func Run(ctx context.Context, cancel context.CancelFunc, logger *slog.Logger) er
 			return fmt.Errorf("%s: %w", s.name, err)
 		}
 	}
+
+	go a.notifications.Run(a.ctx)
 
 	err := a.startChannel()
 	if errors.Is(err, context.Canceled) {
@@ -112,6 +116,9 @@ func (a *app) buildServices() error {
 	a.analyzeExpense = ledger.NewAnalyzeExpense(a.ledger, a.gemini, a.logger)
 	a.exportCSV = ledger.NewExportCSV(a.ledger)
 	a.insights = insights.NewInsights(db.NewDashboardReader(a.db))
+	if err := a.buildNotifications(); err != nil {
+		return err
+	}
 
 	if err := a.analyzeExpense.GenerateRecurringExpenses(a.ctx); err != nil {
 		a.logger.Error("erro ao gerar despesas recorrentes no startup", "error", err)

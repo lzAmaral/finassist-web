@@ -29,7 +29,11 @@ type DecisionResult struct {
 // do mês atual: o mês em andamento só serve para flagrar a volta da cobrança, não conta como mês confirmado.
 func BuildSavings(decisions []domain.Decision, rows []domain.ExpenseKeyMonth, now time.Time) []DecisionResult {
 	charged := map[string]map[time.Time]float64{}
+	observed := map[time.Time]bool{}
 	for _, r := range rows {
+		if r.Total > 0 {
+			observed[r.Month] = true
+		}
 		if charged[r.Key] == nil {
 			charged[r.Key] = map[time.Time]float64{}
 		}
@@ -44,7 +48,7 @@ func BuildSavings(decisions []domain.Decision, rows []domain.ExpenseKeyMonth, no
 			switch {
 			case total >= d.Monthly*stillCharged:
 				res.Returned = total
-			case m.Before(now):
+			case m.Before(now) && observed[m]:
 				res.MonthsConfirmed++
 			}
 		}

@@ -13,13 +13,16 @@ import (
 // Se este teste falhar, o novo import cria um acoplamento entre contextos: mova o código compartilhado para domain/ ou
 // um pacote utilitário, em vez de liberar a dependência aqui.
 var allowed = map[string][]string{
-	"planning":    {},
-	"balances":    {},
-	"ledger":      {},
-	"openfinance": {},
-	"review":      {"planning"},
-	"coach":       {"planning", "review"},
-	"insights":    {"planning", "review", "balances"},
+	"planning":        {},
+	"notifications":   {},
+	"agenda":          {},
+	"balances":        {},
+	"ledger":          {},
+	"openfinance":     {},
+	"statementimport": {},
+	"review":          {"planning"},
+	"coach":           {"planning", "review"},
+	"insights":        {"planning", "review", "balances"},
 }
 
 func TestContextDependencies(t *testing.T) {

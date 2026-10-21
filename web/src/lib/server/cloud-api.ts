@@ -10,6 +10,10 @@ import {
 import { readSnapshot } from './cloud-store.js';
 import { dashboardFromSnapshot } from './finance-data.js';
 import { syncPluggy } from './pluggy-sync.js';
+import { getPortfolio, updatePortfolio } from './portfolio-store.js';
+import { aiStatus, generateAnalysis, saveAIKey } from './gemini-analysis.js';
+import { ValidationError } from './portfolio-data.js';
+import { BlobError, BlobPreconditionFailedError } from '@vercel/blob';
 
 const reply = (body: unknown, status = 200) =>
   json(body, {
@@ -79,6 +83,74 @@ export async function cloudAPI(event: RequestEvent) {
     logout(cookies);
     return reply({ ok: true });
   }
+  if (
+    request.method === 'POST' &&
+    [
+      'portfolio/position',
+      'portfolio/archive',
+      'portfolio/dividend',
+      'portfolio/archive-dividend',
+      'analysis/generate',
+      'analysis/key'
+    ].includes(path)
+  ) {
+    try {
+      const text = await request.text();
+      if (text.length > 8192)
+        return reply({ error: 'Requisição muito grande.' }, 413);
+      let body: unknown;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        return reply({ error: 'Dados inválidos.' }, 400);
+      }
+      if (path === 'analysis/key') {
+        await saveAIKey((body as { key?: unknown })?.key);
+        return reply({ ok: true });
+      }
+      const snapshot = await readSnapshot();
+      if (!snapshot)
+        return reply({ error: 'Sincronize suas contas primeiro.' }, 503);
+      if (path === 'analysis/generate') {
+        const month = (body as { month?: unknown })?.month;
+        if (
+          typeof month !== 'string' ||
+          !/^20\d{2}-(0[1-9]|1[0-2])$/.test(month)
+        )
+          return reply({ error: 'Mês inválido.' }, 400);
+        return reply(
+          await generateAnalysis(dashboardFromSnapshot(snapshot.value, month))
+        );
+      }
+      await updatePortfolio(
+        path.slice('portfolio/'.length),
+        body,
+        snapshot.value
+      );
+      return reply({ ok: true });
+    } catch (error) {
+      if (error instanceof ValidationError)
+        return reply({ error: error.message }, 400);
+      if (
+        error instanceof BlobPreconditionFailedError ||
+        (error instanceof BlobError && /already exists/i.test(error.message))
+      )
+        return reply(
+          {
+            error:
+              'Outra alteração foi salva ao mesmo tempo. Recarregue a página e tente novamente.'
+          },
+          409
+        );
+      return reply(
+        {
+          error:
+            'Não foi possível concluir a operação. Seus dados anteriores foram preservados.'
+        },
+        502
+      );
+    }
+  }
   if (!['GET', 'HEAD'].includes(request.method))
     return reply(
       { error: 'Operação indisponível neste modo de consulta.' },
@@ -97,6 +169,9 @@ export async function cloudAPI(event: RequestEvent) {
         503
       );
     const dashboard = dashboardFromSnapshot(snapshot.value, month);
+    if (path === 'portfolio')
+      return reply(await getPortfolio(snapshot.value, month));
+    if (path === 'analysis') return reply(await aiStatus(month));
     const views: Record<string, unknown> = {
       dashboard,
       summary: dashboard.summary,

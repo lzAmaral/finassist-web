@@ -6,7 +6,8 @@ import {
   FINASSIST_SESSION_KEY,
   FINASSIST_DATA_KEY,
   BLOB_READ_WRITE_TOKEN,
-  CRON_SECRET
+  CRON_SECRET,
+  FINASSIST_PRIVATE_NAMESPACE
 } from '$app/env/private';
 
 export const cloudConfig = () => ({
@@ -20,7 +21,8 @@ export const cloudConfig = () => ({
   sessionKey: FINASSIST_SESSION_KEY,
   dataKey: FINASSIST_DATA_KEY,
   blobToken: BLOB_READ_WRITE_TOKEN,
-  cronSecret: CRON_SECRET
+  cronSecret: CRON_SECRET,
+  privateNamespace: FINASSIST_PRIVATE_NAMESPACE
 });
 export function cloudConfigured() {
   const c = cloudConfig();

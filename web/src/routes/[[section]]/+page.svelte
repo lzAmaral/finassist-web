@@ -1,6 +1,10 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   import Icon from '#lib/Icon.svelte';
+  import SpendingCharts from '#lib/components/SpendingCharts.svelte';
+  import InvestmentPortfolio from '#lib/components/InvestmentPortfolio.svelte';
+  import SpendingAnalysis from '#lib/components/SpendingAnalysis.svelte';
+  import { Button } from '#lib/components/ui/button/index.js';
   import { money, monthLabel, shiftMonth, percent } from '#lib/finance.js';
   let { data }: PageProps = $props();
   let d = $derived(data.dashboard);
@@ -35,6 +39,8 @@
   const nav = [
     ['', 'Visão geral', 'grid'],
     ['transacoes', 'Transações', 'arrows'],
+    ['analise', 'Análise de gastos', 'chart'],
+    ['investimentos', 'Investimentos', 'wallet'],
     ['orcamento', 'Orçamento', 'chart'],
     ['metas', 'Metas', 'target'],
     ['conexoes', 'Contas e conexões', 'bank']
@@ -57,24 +63,6 @@
   let available = $derived(
     d.summary.current.income - d.summary.current.expense
   );
-  let maxBar = $derived(
-    Math.max(1, ...d.series.map((s) => Math.max(s.income, s.expense)))
-  );
-  let donut = $derived.by(() => {
-    let at = 0;
-    const sum = d.breakdown.reduce((n, v) => n + v.total, 0);
-    return `conic-gradient(${
-      d.breakdown.length
-        ? d.breakdown
-            .map((v, i) => {
-              const start = at;
-              at += percent(v.total, sum);
-              return `${colors[i % colors.length]} ${start}% ${at}%`;
-            })
-            .join(',')
-        : '#e8eee9 0% 100%'
-    })`;
-  });
   const display = (n: number) =>
     d.mode === 'unconfigured' ? '—' : hidden ? '••••••' : money(n);
   function exportCSV() {
@@ -171,6 +159,13 @@
         <span class="breadcrumb">Meu espaço <span>/</span> {title}</span>
       </div>
       <div class="topbar-right">
+        {#if d.mode === 'live'}<Button
+            variant="ghost"
+            size="icon"
+            onclick={() => (hidden = !hidden)}
+            aria-label={hidden ? 'Mostrar valores' : 'Ocultar valores'}
+            ><Icon name="eye" size={18} /></Button
+          >{/if}
         <span class="status-pill"
           ><span></span>{d.mode === 'unconfigured'
             ? 'Aguardando conexão'
@@ -186,15 +181,19 @@
           <span class="eyebrow">UM OLHAR PARA O SEU DINHEIRO</span>
           <h1>{title}</h1>
           <p>
-            {data.section === 'transacoes'
-              ? 'Cada movimento, no seu lugar.'
-              : data.section === 'metas'
-                ? 'Pequenos passos para os seus próximos planos.'
-                : data.section === 'conexoes'
-                  ? 'Suas contas, reunidas em um só lugar.'
-                  : data.section === 'orcamento'
-                    ? 'Entenda o que é fixo e o que varia no seu mês.'
-                    : 'Seu mês com mais clareza, do saldo aos próximos planos.'}
+            {data.section === 'investimentos'
+              ? 'Seu patrimônio, com uma visão de conjunto.'
+              : data.section === 'analise'
+                ? 'Transforme movimentações em decisões mais conscientes.'
+                : data.section === 'transacoes'
+                  ? 'Cada movimento, no seu lugar.'
+                  : data.section === 'metas'
+                    ? 'Pequenos passos para os seus próximos planos.'
+                    : data.section === 'conexoes'
+                      ? 'Suas contas, reunidas em um só lugar.'
+                      : data.section === 'orcamento'
+                        ? 'Entenda o que é fixo e o que varia no seu mês.'
+                        : 'Seu mês com mais clareza, do saldo aos próximos planos.'}
           </p>
         </div>
         <div class="month-picker">
@@ -221,18 +220,15 @@
             ).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}. A
             atualização bancária depende da Pluggy.</span
           >
-          <button
-            class="secondary-button"
-            onclick={synchronize}
-            disabled={syncing}
-            >{syncing ? 'Atualizando…' : 'Atualizar dados'}</button
+          <Button variant="outline" onclick={synchronize} disabled={syncing}
+            >{syncing ? 'Atualizando…' : 'Atualizar dados'}</Button
           >
         </div>
-        <p class="fine-print">
+        {#if data.section !== 'investimentos'}<p class="fine-print">
           Resumo de movimentações confirmadas. Transferências entre suas contas,
           aplicações e pagamentos de fatura ficam fora das entradas e saídas.
           Pendências aparecem na lista.
-        </p>
+        </p>{/if}
         {#if syncMessage}<p class="error" role="alert">{syncMessage}</p>{/if}
       {/if}
 
@@ -240,12 +236,7 @@
         <section class="metrics" aria-label="Resumo financeiro">
           <article class="metric balance-metric">
             <div class="metric-label">
-              Saldo nas contas <button
-                onclick={() => (hidden = !hidden)}
-                class="icon-button"
-                aria-label={hidden ? 'Mostrar valores' : 'Ocultar valores'}
-                ><Icon name="eye" size={18} /></button
-              >
+              Saldo nas contas <Icon name="wallet" size={18} />
             </div>
             <div class="metric-value">
               {d.summary.bankBalance === null
@@ -287,87 +278,10 @@
             <div class="metric-foot">Entradas menos saídas</div>
           </article>
         </section>
-        {#if d.mode === 'live'}<div class="charts-grid">
-            <section class="panel cashflow">
-              <div class="panel-heading">
-                <div>
-                  <h2>Seu dinheiro ao longo do tempo</h2>
-                  <p>Entradas e saídas, mês a mês</p>
-                </div>
-                <span class="subtle-tag">Últimos 6 meses</span>
-              </div>
-              <div class="chart-legend">
-                <span><i style="background:#56866d"></i>Entradas</span><span
-                  ><i style="background:#d1dac6"></i>Saídas</span
-                >
-              </div>
-              <div
-                class="bar-chart"
-                role="img"
-                aria-label="Gráfico de entradas e saídas dos últimos seis meses"
-              >
-                <div class="chart-gridlines">
-                  <span>{hidden ? '••••' : money(maxBar)}</span><span
-                    >{hidden ? '••••' : money(maxBar / 2)}</span
-                  ><span>R$ 0</span>
-                </div>
-                <div class="bars">
-                  {#each d.series as point}<div class="bar-group">
-                      <div class="bar-pair">
-                        <div
-                          class="bar income-bar"
-                          style={`height:${percent(point.income, maxBar)}%`}
-                          title={`Entradas: ${display(point.income)}`}
-                        ></div>
-                        <div
-                          class="bar expense-bar"
-                          style={`height:${percent(point.expense, maxBar)}%`}
-                          title={`Saídas: ${display(point.expense)}`}
-                        ></div>
-                      </div>
-                      <span
-                        >{new Date(`${point.month.slice(0, 7)}-15T12:00:00Z`)
-                          .toLocaleDateString('pt-BR', {
-                            month: 'short',
-                            timeZone: 'UTC'
-                          })
-                          .replace('.', '')}</span
-                      >
-                    </div>{/each}
-                </div>
-              </div>
-              <div class="chart-note">
-                <span class="green-text">↗</span> Acompanhar seus hábitos é o primeiro
-                passo para planejar melhor.
-              </div>
-            </section>
-            <section class="panel categories-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Para onde foi?</h2>
-                  <p>Despesas por categoria</p>
-                </div>
-                <Icon name="chart" size={18} />
-              </div>
-              <div class="donut-wrap">
-                <div class="donut" style={`background:${donut}`}>
-                  <div>
-                    <small>Total de saídas</small><strong
-                      >{display(d.summary.current.expense)}</strong
-                    >
-                  </div>
-                </div>
-              </div>
-              <div class="category-list">
-                {#each d.breakdown.slice(0, 5) as item, i}<div>
-                    <span
-                      ><i style={`background:${colors[i % colors.length]}`}
-                      ></i>{item.label}</span
-                    ><strong>{display(item.total)}</strong>
-                  </div>{/each}
-              </div>
-            </section>
-          </div>{:else}<section
+        {#if d.mode === 'live'}<SpendingCharts
+            dashboard={d}
+            {hidden}
+          />{:else}<section
             class="panel empty-state"
             style="margin-bottom:23px"
           >
@@ -382,6 +296,27 @@
           </section>{/if}
       {/if}
 
+      {#if data.section === 'investimentos'}
+        {#if data.portfolio}<InvestmentPortfolio
+            portfolio={data.portfolio}
+            {hidden}
+            month={d.month}
+          />
+        {:else}<section class="panel empty-state">
+            Conecte a versão cloud para cadastrar e acompanhar seus
+            investimentos.
+          </section>{/if}
+      {/if}
+      {#if data.section === 'analise'}
+        {#if d.mode === 'live'}<SpendingAnalysis
+            dashboard={d}
+            ai={data.ai ?? null}
+            {hidden}
+          />
+        {:else}<section class="panel empty-state">
+            Conecte suas contas para analisar seus gastos.
+          </section>{/if}
+      {/if}
       {#if data.section === '' || data.section === 'transacoes'}
         <section class="panel transactions-panel">
           <div class="panel-heading">

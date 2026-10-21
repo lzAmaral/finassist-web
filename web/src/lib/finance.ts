@@ -19,6 +19,8 @@ export interface Dashboard {
   mode: 'unconfigured' | 'live';
   source?: 'pluggy';
   syncedAt?: string;
+  daily?: { day: string; income: number; expense: number }[];
+  accountSpending?: { label: string; total: number }[];
   month: string;
   summary: { current: Totals; previous: Totals; bankBalance: number | null };
   transactions: { items: Transaction[]; total: number };

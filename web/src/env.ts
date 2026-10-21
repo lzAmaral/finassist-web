@@ -20,5 +20,8 @@ export const variables = defineEnvVars({
   FINASSIST_SESSION_KEY: secret,
   FINASSIST_DATA_KEY: secret,
   BLOB_READ_WRITE_TOKEN: secret,
-  CRON_SECRET: secret
+  CRON_SECRET: secret,
+  GEMINI_API_KEY: secret,
+  GEMINI_MODEL: secret,
+  FINASSIST_PRIVATE_NAMESPACE: secret
 });

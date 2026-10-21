@@ -1,6 +1,7 @@
 import { cloudConfig } from './cloud-config.js';
 import { readSnapshot, writeSnapshot } from './cloud-store.js';
 import type { Account, Movement, Snapshot } from './finance-data.js';
+import type { ImportedInvestment } from '#lib/investments.js';
 import {
   ownTransfer,
   completeDocument,
@@ -11,7 +12,10 @@ import {
 let pending: Promise<Snapshot> | undefined;
 async function synchronize(): Promise<Snapshot> {
   const previous = await readSnapshot(true);
-  if (previous && Date.now() - Date.parse(previous.value.syncedAt) < 5 * 60_000)
+  if (
+    previous?.value.investments &&
+    Date.now() - Date.parse(previous.value.syncedAt) < 5 * 60_000
+  )
     return previous.value;
   const c = cloudConfig();
   const signal = AbortSignal.timeout(90_000);
@@ -148,12 +152,59 @@ async function synchronize(): Promise<Snapshot> {
       })
     )
   ).flat();
+  let investments = previous?.value.investments;
+  let investmentsSyncedAt = previous?.value.investmentsSyncedAt;
+  let investmentsError = false;
+  try {
+    investments = (
+      await Promise.all(
+        c.itemIds.map(async (itemId) => {
+          const all: ImportedInvestment[] = [];
+          for (let page = 1; page <= 100; page++) {
+            const data = await get<{
+              results: ImportedInvestment[];
+              totalPages: number;
+            }>(
+              `/investments?itemId=${encodeURIComponent(itemId)}&page=${page}&pageSize=500`
+            );
+            for (const i of data.results) {
+              if (!i.id || !Number.isFinite(i.balance))
+                throw new Error('Investimento inválido.');
+              all.push({
+                id: i.id,
+                itemId,
+                name: i.name.slice(0, 120),
+                type: i.type,
+                subtype: i.subtype,
+                balance: i.balance,
+                amount: i.amount,
+                amountOriginal: i.amountOriginal,
+                quantity: i.quantity,
+                value: i.value,
+                currencyCode: i.currencyCode,
+                date: i.date,
+                status: i.status
+              });
+            }
+            if (page >= data.totalPages) return all;
+          }
+          throw new Error('Paginação de investimentos excedeu o limite.');
+        })
+      )
+    ).flat();
+    investmentsSyncedAt = new Date().toISOString();
+  } catch {
+    investmentsError = true;
+  }
   const value: Snapshot = {
     version: 1,
     syncedAt: new Date().toISOString(),
     items,
     accounts,
-    transactions
+    transactions,
+    investments,
+    investmentsSyncedAt,
+    investmentsError
   };
   await writeSnapshot(value, previous?.etag);
   return value;

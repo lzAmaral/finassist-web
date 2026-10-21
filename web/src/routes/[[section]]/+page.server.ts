@@ -13,7 +13,17 @@ export const load: PageServerLoad = async ({
   setHeaders
 }) => {
   const section = params.section ?? '';
-  if (!['', 'transacoes', 'orcamento', 'metas', 'conexoes'].includes(section))
+  if (
+    ![
+      '',
+      'transacoes',
+      'orcamento',
+      'metas',
+      'conexoes',
+      'investimentos',
+      'analise'
+    ].includes(section)
+  )
     error(404, 'Página não encontrada.');
   const current = new Intl.DateTimeFormat('en-CA', {
     year: 'numeric',
@@ -40,7 +50,21 @@ export const load: PageServerLoad = async ({
   if (cloud)
     return {
       section,
-      dashboard: (await get(`dashboard?month=${month}`)) as Dashboard
+      dashboard: (await get(`dashboard?month=${month}`)) as Dashboard,
+      portfolio:
+        section === 'investimentos'
+          ? ((await get(
+              `portfolio?month=${month}`
+            )) as import('#lib/investments.js').Portfolio)
+          : null,
+      ai:
+        section === 'analise'
+          ? ((await get(`analysis?month=${month}`)) as {
+              configured: boolean;
+              analysis: import('#lib/analysis.js').GeminiAnalysis | null;
+              model: string;
+            })
+          : null
     };
   const [summary, transactions, breakdown, series, balances, budget, goals] =
     await Promise.all([

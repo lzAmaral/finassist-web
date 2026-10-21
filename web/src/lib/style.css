@@ -1,11 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Manrope:wght@400;500;600;650;700;750;800&display=swap');
+@layer legacy {
 :root {
   font-family: 'DM Sans', sans-serif;
   color: #27372e;
   background: #f7f8f5;
   font-synthesis: none;
   font-weight: 400;
-  --muted: #849087;
+  --legacy-muted: #849087;
   --green: #3e7054;
   --border: #e9ece5;
 }
@@ -277,7 +278,7 @@ main {
 }
 .page-heading p {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--legacy-muted);
   margin-top: 8px;
 }
 .month-picker {
@@ -1424,4 +1425,6 @@ footer .green-text {
 .secondary-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
 }

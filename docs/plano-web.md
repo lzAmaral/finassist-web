@@ -47,3 +47,9 @@ A conversão e a agregação cloud estão em um módulo puro no servidor, cobert
 ## Atualização — remoção dos dados de exemplo
 
 A publicação passou a apresentar um painel vazio enquanto a conexão estiver pendente. Os saldos, transações, contas e metas fictícios foram removidos do frontend. A ausência de conexão não é apresentada como saldo zero nem como sessão autenticada.
+
+## Carteira, gráficos e análise — 21/10/2026
+
+A interface passou a usar shadcn-svelte, Tailwind 4 e LayerChart, com gráficos de barras, distribuição por categoria e acumulado diário. A aba Investimentos lê posições da Pluggy e permite manter posições manuais e proventos em armazenamento privado criptografado. Não apresenta lucro sem custo conhecido, nem confunde valor bruto com capital aplicado.
+
+A aba Análise oferece cálculos locais e integração opcional Gemini, acionada pelo proprietário. O payload externo contém apenas percentuais e categorias fixas, com limites persistentes e validação do resultado. Ativar o Gemini depende da chave da conta do proprietário; os gráficos e a análise local não dependem dela. A carteira é uma primeira versão inspirada nas funções públicas do Investidor10, sem copiar sua área privada nem prometer equivalência completa.

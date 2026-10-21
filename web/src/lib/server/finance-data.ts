@@ -1,4 +1,5 @@
 import type { Dashboard, Transaction, Totals } from '#lib/finance.js';
+import type { ImportedInvestment } from '#lib/investments.js';
 
 export interface Account {
   id: string;
@@ -36,6 +37,9 @@ export interface Snapshot {
   items: { id: string; status: string; updatedAt: string | null }[];
   accounts: Account[];
   transactions: Movement[];
+  investments?: ImportedInvestment[];
+  investmentsSyncedAt?: string;
+  investmentsError?: boolean;
 }
 
 const categories: [RegExp, string, string][] = [
@@ -208,11 +212,46 @@ export function dashboardFromSnapshot(
   const items = transactions
     .filter((t) => t.date.startsWith(month))
     .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo'
+  }).format(new Date());
+  const last = new Date(`${month}-01T12:00:00Z`);
+  last.setUTCMonth(last.getUTCMonth() + 1, 0);
+  const days =
+    month === today.slice(0, 7)
+      ? Number(today.slice(8, 10))
+      : last.getUTCDate();
+  let cumulativeIncome = 0,
+    cumulativeExpense = 0;
+  const daily = Array.from({ length: days }, (_, index) => {
+    const day = `${month}-${String(index + 1).padStart(2, '0')}`;
+    for (const t of settled.filter((t) => t.date === day)) {
+      if (t.kind === 'INCOME') cumulativeIncome += cents(t.amount);
+      if (t.kind === 'EXPENSE') cumulativeExpense += cents(t.amount);
+    }
+    return {
+      day,
+      income: reais(cumulativeIncome),
+      expense: reais(cumulativeExpense)
+    };
+  });
+  const byAccount = new Map<string, number>();
+  for (const t of items.filter(
+    (t) => t.status === 'POSTED' && t.kind === 'EXPENSE'
+  ))
+    byAccount.set(
+      t.accountName ?? 'Outros',
+      (byAccount.get(t.accountName ?? 'Outros') ?? 0) + cents(t.amount)
+    );
   return {
     mode: 'live',
     source: 'pluggy',
     syncedAt: snapshot.syncedAt,
     month,
+    daily,
+    accountSpending: [...byAccount]
+      .map(([label, total]) => ({ label, total: reais(total) }))
+      .sort((a, b) => b.total - a.total),
     summary: {
       current: totals(month),
       previous: totals(monthOffset(month, -1)),

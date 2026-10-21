@@ -1,6 +1,6 @@
 # FinAssist Web
 
-SvelteKit 3, Svelte 5 e TypeScript. Painel em português com saldos, gráficos mensais, busca de transações, exportação CSV e acesso protegido. Publicado na [Vercel](https://finassist-web.vercel.app).
+SvelteKit 3, Svelte 5 e TypeScript. Painel em português com saldos, gráficos interativos, busca de transações, carteira de investimentos, análise de gastos e acesso protegido. Publicado na [Vercel](https://finassist-web.vercel.app).
 
 ## Executar
 
@@ -23,7 +23,27 @@ O login usa senha com hash scrypt, cookie HttpOnly, Secure em produção, SameSi
 
 O resumo considera lançamentos confirmados. Pendências ficam identificadas na lista, sem inflar os totais. Transferências próprias, aplicações e liquidações de fatura ficam fora de receitas/despesas; compras do cartão e estornos seguem o sentido do lançamento. Parcelas usam o mês previsto da fatura quando disponível. O saldo disponível soma contas bancárias em BRL e exclui faturas e investimentos. A precisão das categorias e a identificação de transferências dependem dos metadados da instituição.
 
-Este modo fornece consulta das finanças bancárias. Orçamentos, metas e lançamentos manuais via Telegram ainda pertencem à instalação Go; não são sincronizados com este snapshot. Um banco relacional gerenciado, como Supabase, pode ser adicionado quando essas operações forem integradas à versão cloud.
+Este modo fornece consulta bancária, carteira manual e análise de gastos. Orçamentos, metas e lançamentos manuais via Telegram ainda pertencem à instalação Go; não são sincronizados com este snapshot. Um banco relacional gerenciado, como Supabase, pode ser adicionado quando essas operações forem integradas à versão cloud.
+
+## Carteira e gráficos
+
+A UI utiliza componentes [shadcn-svelte](https://www.shadcn-svelte.com/) com Tailwind 4 e gráficos LayerChart. Os estados dos componentes foram adaptados aos atributos `data-state` e `data-orientation` do Bits UI 2. `tsconfig.shadcn.json` permite usar o CLI com os imports nativos `#lib` do SvelteKit 3. A licença dos componentes está em `THIRD_PARTY_LICENSES`.
+
+A aba Investimentos combina posições atuais da Pluggy com posições manuais em reais. Importa todas as páginas, exclui posições totalmente resgatadas e permite cadastrar, editar, arquivar e restaurar posições manuais. Proventos recebidos também podem ser registrados, arquivados e restaurados. O estado manual fica em um arquivo separado, privado e criptografado, com escrita condicional para evitar que alterações concorrentes se sobrescrevam.
+
+O custo de uma posição importada usa `amountOriginal` quando disponível. O campo Pluggy `amount` representa valor bruto e nunca é tratado como custo. A variação exibida considera somente posições com custo conhecido; não é rentabilidade histórica TWR/IRR. O gráfico de proventos usa os registros informados, sem inventar dividendos. Preços de posições manuais são informados pelo proprietário, sem feed automático de mercado. A carteira não reproduz todas as funções do Investidor10: não há comparação com benchmarks, recomendações, imposto de renda ou cotação independente.
+
+## Análise de gastos e Gemini
+
+A análise local calcula saldo do período, parcela da renda que sobrou, comparação com o mês anterior, categorias e simulação de redução de despesas. Funciona sem serviço de IA.
+
+A integração Google Gemini é opcional: configure a chave no campo privado da aba Análise de gastos ou no segredo de runtime `GEMINI_API_KEY`. `GEMINI_MODEL` permite escolher o modelo; o padrão é `gemini-3.8-flash`. A chave configurada no app fica criptografada, nunca é retornada nas respostas e não altera o faturamento do Google. Para usar somente a cota gratuita, use um projeto sem faturamento e verifique a disponibilidade e limites na sua conta.
+
+Somente percentuais, índices normalizados e categorias de uma lista fixa são enviados ao Google. Não são enviados valores monetários, datas de referência, nomes, CPF, bancos, IDs, descrições ou categorias livres do extrato. O envio só acontece ao clicar em Analisar meus hábitos. O resultado é identificado como Gemini, validado, armazenado com o mês correspondente e reaproveitado por até 24 horas para os mesmos indicadores. Há reserva persistente de no máximo 10 solicitações por dia; falhas não são apresentadas como análises reais.
+
+Os [termos do Google](https://ai.google.dev/gemini-api/terms) informam que entradas da cota gratuita podem ser usadas para melhoria dos serviços. A UI informa isso antes do envio. A análise ajuda a revisar hábitos; não recomenda compra ou venda de ativos.
+
+Para testes de escrita, `FINASSIST_PRIVATE_NAMESPACE` isola a carteira manual e a configuração de IA em outro prefixo do Blob. Não configure essa variável na produção habitual. Testes de desenvolvimento usam posições sintéticas nesse prefixo, sem acrescentá-las à carteira real.
 
 ## API Go existente
 

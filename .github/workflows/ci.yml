@@ -37,12 +37,16 @@ jobs:
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - name: Formatação
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - name: Migrations
         run: for f in migrations/*.sql; do PGPASSWORD=finassist psql -q -v ON_ERROR_STOP=1 -h localhost -U finassist -d finassist -f "$f"; done
       - name: Testes (com banco)
-        run: go test ./...
+        # Os testes de banco compartilham fixtures entre pacotes; a ponte web usa Node 24.
+        run: go test -p 1 ./...
       - uses: golangci/golangci-lint-action@v8
         with:
           version: latest

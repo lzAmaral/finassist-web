@@ -24,6 +24,14 @@ Criar uma experiência web em português com SvelteKit, mantendo as regras finan
 4. Implantação do frontend na Vercel e do backend em um serviço de containers.
 5. Avaliar Supabase com migrações revisadas e acesso ao banco restrito ao backend.
 
+## Primeira versão entregue — 20/10/2026
+
+- Interface SvelteKit em `web/`, com navegação responsiva, gráficos, busca de transações, exportação CSV e telas de orçamento, metas e contas.
+- Demonstração publicada em https://finassist-web.vercel.app, sem dados financeiros reais.
+- Proxy privado para a API Go, páginas de login e configuração inicial. A conectividade local, o redirecionamento de instalação pendente e a rejeição de origem externa foram verificados. O fluxo completo de autenticação e sincronização bancária depende das credenciais do proprietário.
+- Checagem Svelte/TypeScript, build com adaptador Vercel e workflow de CI para `web/`.
+- Pendente para uso real remoto: hospedar o backend persistente, configurar `FINASSIST_API_URL` e conectar os bancos. Supabase permanece opcional.
+
 ## Critérios de arquitetura
 
 Componentes apresentam dados; módulos de aplicação organizam fluxos; adaptadores de API concentram chamadas externas. Totais, classificação e conciliação continuam no Go. Cada nova integração deve ter contrato explícito e permitir substituição sem reescrever a interface.

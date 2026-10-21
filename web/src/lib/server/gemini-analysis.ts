@@ -8,6 +8,7 @@ import { ValidationError } from './portfolio-data.js';
 
 interface AIState {
   version: 1;
+  dataSource?: 'go' | 'cloud';
   key?: string;
   analysis?: GeminiAnalysis;
   analysisMonth?: string;
@@ -21,11 +22,18 @@ async function read() {
     throw new Error('Configuração de análise inválida.');
   return stored;
 }
-export async function aiStatus(month: string) {
+export async function aiStatus(
+  month: string,
+  dataSource: 'go' | 'cloud' = 'cloud'
+) {
   const state = (await read())?.value;
   return {
     configured: !!(GEMINI_API_KEY || state?.key),
-    analysis: state?.analysisMonth === month ? (state.analysis ?? null) : null,
+    analysis:
+      state?.analysisMonth === month &&
+      (state.dataSource ?? 'cloud') === dataSource
+        ? (state.analysis ?? null)
+        : null,
     model: GEMINI_MODEL || 'gemini-3.8-flash'
   };
 }
@@ -39,7 +47,8 @@ export async function saveAIKey(input: unknown) {
   await writePrivate(path, { ...stored?.value, version: 1, key }, stored?.etag);
 }
 export async function generateAnalysis(
-  dashboard: Dashboard
+  dashboard: Dashboard,
+  dataSource: 'go' | 'cloud' = 'cloud'
 ): Promise<GeminiAnalysis> {
   const stored = await read();
   const state: AIState = stored?.value ?? { version: 1 };
@@ -50,7 +59,7 @@ export async function generateAnalysis(
     );
   const payload = anonymousIndicators(dashboard);
   const fingerprint = createHash('sha256')
-    .update(dashboard.month + JSON.stringify(payload))
+    .update(dataSource + dashboard.month + JSON.stringify(payload))
     .digest('hex');
   if (
     state.fingerprint === fingerprint &&
@@ -142,7 +151,13 @@ export async function generateAnalysis(
   };
   await writePrivate(
     path,
-    { ...state, analysis, fingerprint, analysisMonth: dashboard.month },
+    {
+      ...state,
+      dataSource,
+      analysis,
+      fingerprint,
+      analysisMonth: dashboard.month
+    },
     reservation.etag
   );
   return analysis;

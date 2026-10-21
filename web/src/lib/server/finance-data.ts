@@ -151,6 +151,7 @@ export function movement(t: Movement, account: Account): Transaction | null {
       : t.paymentData?.paymentMethod || 'Conta bancária',
     kind,
     amount,
+    accountId: t.accountId,
     accountName: account.name,
     status: t.status
   };

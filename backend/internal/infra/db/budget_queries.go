@@ -12,7 +12,7 @@ func (r *BudgetRepo) ExpenseKeyMonths(ctx context.Context, from, to time.Time) (
 	query := `
 		SELECT ` + expenseKey + ` AS key,
 		       (ARRAY_AGG(` + cleanDescription + ` ORDER BY pay.created_at DESC))[1] AS label,
-		       (ARRAY_AGG(p.category ORDER BY pay.created_at DESC))[1] AS category,
+		       (ARRAY_AGG(effective_payment_category(pay.id, p.category) ORDER BY pay.created_at DESC))[1] AS category,
 		       ` + paymentMonth + ` AS month,
 		       SUM(pay.amount), COUNT(*),
 		       EXTRACT(DAY FROM MAX(COALESCE(pay.due_date, pay.reference_month, pay.created_at::date)))::int,
@@ -107,8 +107,8 @@ func (r *BudgetRepo) KnownInstallments(ctx context.Context, from, to time.Time) 
 
 func (r *BudgetRepo) IncomePayments(ctx context.Context, from, to time.Time) ([]domain.IncomePayment, error) {
 	query := `
-		SELECT CASE WHEN p.category = 'SALARY' THEN 'salario' ELSE ` + expenseKey + ` END AS key,
-		       CASE WHEN p.category = 'SALARY' THEN 'Salário' ELSE p.description END, ` + paymentMonth + ` AS month, pay.amount
+		SELECT CASE WHEN effective_payment_category(pay.id, p.category) = 'SALARY' THEN 'salario' ELSE ` + expenseKey + ` END AS key,
+		       CASE WHEN effective_payment_category(pay.id, p.category) = 'SALARY' THEN 'Salário' ELSE p.description END, ` + paymentMonth + ` AS month, pay.amount
 		FROM payments pay
 		JOIN purchases p ON p.id = pay.purchase_id
 		WHERE p.kind = 'INCOME' AND pay.status != 'CANCELLED' AND p.description IS NOT NULL

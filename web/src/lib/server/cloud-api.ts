@@ -10,6 +10,7 @@ import {
 import { readSnapshot } from './cloud-store.js';
 import { dashboardFromSnapshot } from './finance-data.js';
 import { syncPluggy } from './pluggy-sync.js';
+import { cloudAgenda } from './card-agenda-data.js';
 import { getPortfolio, updatePortfolio } from './portfolio-store.js';
 import { aiStatus, generateAnalysis, saveAIKey } from './gemini-analysis.js';
 import { ValidationError } from './portfolio-data.js';
@@ -165,10 +166,14 @@ export async function cloudAPI(event: RequestEvent) {
     const snapshot = await readSnapshot();
     if (!snapshot)
       return reply(
-        { error: 'A primeira sincronização ainda não foi concluída.' },
+        {
+          error: 'A primeira sincronização ainda não foi concluída.',
+          code: 'snapshot_pending'
+        },
         503
       );
     const dashboard = dashboardFromSnapshot(snapshot.value, month);
+    if (path === 'agenda') return reply(cloudAgenda(snapshot.value));
     if (path === 'portfolio')
       return reply(await getPortfolio(snapshot.value, month));
     if (path === 'analysis') return reply(await aiStatus(month));

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/MarcosAAlbanoJunior/go-financial-assistant/internal/usecase/notifications"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -45,7 +46,8 @@ type Server struct {
 	factor *SecondFactor
 
 	// setup liga o setup pelo navegador (nil = desligado).
-	setup *SetupDeps
+	setup         *SetupDeps
+	notifications *notifications.Service
 
 	mu     sync.Mutex
 	runCtx context.Context // definido em Start: rotas montadas depois (canal ligado pelo setup) já sobem as limpezas

@@ -13,6 +13,6 @@ type UncategorizedGroup struct {
 
 // CategoryRule é a categoria escolhida para uma conta; OTHER significa "manter em Outros".
 type CategoryRule struct {
-	Key      string
-	Category string
+	Key      string `json:"key"`
+	Category string `json:"category"`
 }

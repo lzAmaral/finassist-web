@@ -1,5 +1,5 @@
 import type { Dashboard } from '#lib/finance.js';
-import { shiftMonth } from '#lib/finance.js';
+import { shiftMonth } from '../finance.ts';
 
 // Ausência de conexão não representa saldo zero nem autoriza gerar movimentos.
 export function emptyDashboard(month: string): Dashboard {

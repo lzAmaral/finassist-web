@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -70,10 +71,33 @@ type groupJSON struct {
 }
 
 // getSettings devolve as configurações do canal ativo. Segredos nunca vão: só "configurado".
-func (a *api) getSettings(w http.ResponseWriter, _ *http.Request) {
+func (a *api) getSettings(w http.ResponseWriter, r *http.Request) {
 	d := a.settings
+	var digestValues map[string]string
+	var digestMinute int
+	if a.legacyNotificationSettings() {
+		p, err := a.notifications.Preferences(r.Context())
+		if err != nil {
+			a.fail(w, "preferências do resumo", err)
+			return
+		}
+		digestValues = digestPreferenceValues(p)
+		digestMinute = p.Minute
+	}
 	byGroup := map[string][]fieldJSON{}
 	for _, f := range d.Service.Fields(d.channel()) {
+		if value, ok := digestValues[f.Key]; ok {
+			f.Value = value
+			f.Source = settings.SourceDB
+			f.IsSet = true
+			f.PendingRestart = false
+			if f.Key == "DIGEST_HOUR" {
+				f.Help = fmt.Sprintf("Horário atual %s:%02d. Alterar a hora redefine os minutos para 00; opções completas em Notificações.", value, digestMinute)
+			}
+			if f.Key == "DIGEST_ENABLED" {
+				f.Help = "Liga o resumo e o canal Telegram das notificações. Outros tipos e privacidade ficam em Notificações."
+			}
+		}
 		byGroup[f.Group] = append(byGroup[f.Group], fieldJSON{
 			Key: f.Key, Label: f.Label, Help: f.Help, Kind: string(f.Kind), Options: f.Options, Min: f.Min, Max: f.Max,
 			Live: f.Live, Value: f.Value, IsSet: f.IsSet, Source: string(f.Source), PendingRestart: f.PendingRestart, Default: f.Default, Sensitive: f.Sensitive(),
@@ -122,7 +146,17 @@ func (a *api) putSettings(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	changed, err := d.Service.Set(r.Context(), body.Values)
+	remaining, prefs, digestChanged, err := a.prepareLegacyDigest(r.Context(), body.Values)
+	var changed []string
+	if err == nil && len(remaining) > 0 {
+		changed, err = d.Service.Set(r.Context(), remaining)
+	}
+	if err == nil && prefs != nil {
+		err = a.notifications.Save(r.Context(), *prefs)
+		if err == nil {
+			changed = append(changed, digestChanged...)
+		}
+	}
 	var invalid *settings.ValidationError
 	switch {
 	case errors.As(err, &invalid), errors.Is(err, settings.ErrNoEncryptionKey), errors.Is(err, settings.ErrUnknownKey):
@@ -172,6 +206,18 @@ func (a *api) resetSetting(w http.ResponseWriter, r *http.Request) {
 		}
 		a.fail(w, "restaurar configuração", err)
 		return
+	}
+	if a.legacyNotificationSettings() && strings.HasPrefix(key, "DIGEST_") {
+		p, err := a.notifications.Preferences(r.Context())
+		if err != nil {
+			a.fail(w, "restaurar resumo", err)
+			return
+		}
+		applyDigestPreferenceValue(&p, key, a.settings.Service.Get(key))
+		if err = a.notifications.Save(r.Context(), p); err != nil {
+			a.fail(w, "restaurar resumo", err)
+			return
+		}
 	}
 	a.record(r, "reset", []string{key})
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "restartPending": a.settings.Service.NeedsRestart(a.settings.channel())})

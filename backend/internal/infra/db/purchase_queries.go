@@ -127,13 +127,13 @@ func (r *LedgerRepo) FindByDescription(ctx context.Context, description string) 
 
 func (r *LedgerRepo) FindPaymentsByMonth(ctx context.Context, month time.Time) ([]ports.PaymentSummary, error) {
 	query := `
-		SELECT p.category, SUM(pay.amount) AS total
+		SELECT effective_payment_category(pay.id, p.category), SUM(pay.amount) AS total
 		FROM payments pay
 		JOIN purchases p ON p.id = pay.purchase_id
 		WHERE DATE_TRUNC('month', COALESCE(pay.due_date, pay.reference_month, pay.created_at)) = DATE_TRUNC('month', $1::timestamptz)
 		  AND pay.status != 'CANCELLED'
 		  AND p.kind = 'EXPENSE'
-		GROUP BY p.category
+		GROUP BY effective_payment_category(pay.id, p.category)
 		ORDER BY total DESC
 	`
 	rows, err := r.db.Pool.Query(ctx, query, month)
@@ -157,7 +157,7 @@ func (r *LedgerRepo) FindPaymentDetailsByMonth(ctx context.Context, month time.T
 	query := `
 		SELECT
 		    p.description,
-		    p.category,
+		    effective_payment_category(pay.id, p.category) AS category,
 		    p.payment_method,
 		    pay.amount,
 		    pay.status,

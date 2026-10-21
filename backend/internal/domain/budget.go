@@ -42,6 +42,7 @@ type CategoryMonth struct {
 
 // ExpensePayment é uma despesa individual, com a descrição normalizada em Key.
 type ExpensePayment struct {
+	ID            string
 	Key           string
 	Label         string // descrição de exemplo, como veio do banco
 	Category      string

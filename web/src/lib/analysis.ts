@@ -40,7 +40,8 @@ export function anonymousIndicators(dashboard: Dashboard) {
   ]);
   const buckets = new Map<string, number>();
   for (const t of dashboard.transactions.items) {
-    if (t.kind !== 'EXPENSE' || t.status !== 'POSTED') continue;
+    if (t.kind !== 'EXPENSE' || !['POSTED', 'PAID'].includes(t.status))
+      continue;
     const key = allowed.has(t.category) ? t.category : 'OTHER';
     buckets.set(key, (buckets.get(key) ?? 0) + t.amount);
   }

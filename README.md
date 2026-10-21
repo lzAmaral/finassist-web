@@ -334,7 +334,7 @@ docker compose up -d --build
 **Migrations novas:** o Postgres só roda os scripts de `backend/migrations/` quando o banco é criado. Em um banco existente, aplique à mão os que faltam (rodar de novo não estraga nada):
 
 ```bash
-for f in backend/migrations/01[0-9]_*.sql; do docker compose exec -T postgres psql -q -U finassist -d finassist < "$f"; done
+for f in backend/migrations/*.sql; do docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -q -U finassist -d finassist < "$f" || break; done
 ```
 
 | Migration | Para quê |
@@ -344,6 +344,9 @@ for f in backend/migrations/01[0-9]_*.sql; do docker compose exec -T postgres ps
 | `016`, `017` | Página Configurações e o histórico de alterações |
 | `018` | Idade real dos dados do banco |
 | `019` | Setup no navegador e recuperação com `SETUP_REOPEN` |
+| `020` | Correções individuais de categoria preservadas na sincronização |
+| `021` | Preferências e histórico persistente de notificações |
+| `022` | Lotes de importação de extratos, conciliação e reversão |
 
 **Quem já usava tudo pelo `.env`** (senha em `DASHBOARD_PASSWORD`, Telegram em `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, Pluggy, Gemini) não precisa mudar nada: o app não mostra o setup e o login continua igual. O que for salvo pela página Configurações passa a valer mais que o `.env`. Para poder usar a recuperação com `SETUP_REOPEN`, rode `make init` uma vez (ele só acrescenta o que falta).
 

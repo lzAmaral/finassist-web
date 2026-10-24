@@ -1,8 +1,8 @@
 # Tarefas de melhoria do FinAssist Web
 
-Este é o ponto de entrada para executar e retomar as 10 tarefas. O [plano de produto](../plano-melhorias-produto.md) preserva pesquisa, diagnóstico e direção. **Os arquivos individuais são a fonte do escopo, checklists e evidências de cada tarefa.**
+Este é o ponto de entrada para executar e retomar as tarefas. O [plano de produto](../plano-melhorias-produto.md) preserva pesquisa, diagnóstico e direção. **Os arquivos individuais são a fonte do escopo, checklists e evidências de cada tarefa.**
 
-Preparado em 21/10/2026. Progresso: **10 de 10 tarefas concluídas**. Implementação por agentes GPT-6.1 Sol (high), com integração e validação pelo coordenador. Veja o [relatório integrado](validacao-integrada.md). Alterações locais; sem deploy ou migração de produção.
+Preparado em 21/10/2026. Progresso: **11 de 17 tarefas concluídas** (primeira etapa: 10/10; segunda etapa: 1/7). Primeira etapa implementada por agentes GPT-6.1 Sol (high), com integração e validação pelo coordenador. Veja o [relatório integrado](validacao-integrada.md). Primeira etapa integrada em `main` no commit `19e1ec5` e publicada no web. A ativação do backend é acompanhada separadamente na FA-17.
 
 ## Índice e dependências
 
@@ -74,3 +74,25 @@ FA-04 pode começar a modelagem após a decisão de dados de FA-02; a integraç�
 Exemplo de instrução para um agente:
 
 > Execute a FA-01 em `docs/tasks/fa-01-primeiro-uso.md`. Leia primeiro `docs/tasks/README.md`, confira as dependências e o código atual, implemente o escopo, registre as evidências e mantenha checklists e retomada atualizados. Não marque a tarefa como concluída enquanto houver critérios de aceite sem validação.
+
+## Segunda etapa — 23/10/2026
+
+Backlog autorizado pelo usuário. FA-12 concluída usando dados e contratos já disponíveis; implementação e validações registradas no arquivo individual. FA-11 exige verificar a fonte de faturas; FA-13 antecede FA-14; FA-15 depende da semântica de faturas e estornos; FA-16 exige plano de conciliação e reversão. FA-17 é operacional.
+
+| ID | Tarefa | Prioridade | Status | Dependências |
+| --- | --- | --- | --- | --- |
+| FA-11 | [Faturas identificadas e confirmação de quitação](fa-11-faturas-identificadas.md) | P1 | Pendente | FA-04; contrato do provedor validado |
+| FA-12 | [Limites mensais por categoria](fa-12-limites-categoria.md) | P1 | Concluída | FA-02, FA-05 e FA-07 |
+| FA-13 | [Perguntas livres sobre os dados](fa-13-perguntas-livres.md) | P2 | Pendente | FA-09; calculadores existentes |
+| FA-14 | [Alterações financeiras por conversa](fa-14-alteracoes-conversa.md) | P2 | Pendente | FA-13 e APIs de escrita correspondentes |
+| FA-15 | [Importação de extratos de cartão](fa-15-extratos-cartao.md) | P2 | Pendente | FA-10 e FA-11; semântica de estornos resolvida |
+| FA-16 | [União de contas locais e conectadas](fa-16-uniao-contas.md) | P2 | Pendente | FA-02, FA-05 e FA-10 |
+| FA-17 | [Ativação operacional do backend](fa-17-ativacao-backend.md) | P0 | Pendente | FA-02; ambiente de destino identificado; migrações das entregas ativadas |
+
+- [ ] [FA-11 — Faturas identificadas e confirmação de quitação](fa-11-faturas-identificadas.md)
+- [x] [FA-12 — Limites mensais por categoria](fa-12-limites-categoria.md)
+- [ ] [FA-13 — Perguntas livres sobre os dados](fa-13-perguntas-livres.md)
+- [ ] [FA-14 — Alterações financeiras por conversa](fa-14-alteracoes-conversa.md)
+- [ ] [FA-15 — Importação de extratos de cartão](fa-15-extratos-cartao.md)
+- [ ] [FA-16 — União de contas locais e conectadas](fa-16-uniao-contas.md)
+- [ ] [FA-17 — Ativação operacional do backend](fa-17-ativacao-backend.md)

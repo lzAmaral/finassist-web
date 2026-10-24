@@ -73,3 +73,16 @@ Cada passo vai para o histórico de alterações das Configurações (ação `se
 | `POST /api/settings/test/{pluggy\|gemini\|telegram}` | testa a conexão com as credenciais salvas |
 | `POST /api/restart` | pede ao processo que reinicie (o Docker o sobe de novo) |
 
+
+
+### Limites mensais por categoria (FA-12)
+
+Requer sessão Go e migração `023`. As escritas exigem JSON e mesma origem.
+
+- `GET /api/budget-limits?month=YYYY-MM`: retorna `month` e `items`, com categoria/rótulo, `limitCents` (null = sem limite), `version`, `paidCents`, `pendingCents`, `spentCents`, `count`, `remainingCents`, `usagePercent` e `status`.
+- `PUT /api/budget-limits/{category}?month=YYYY-MM`: corpo `{ "limitCents": 50000, "version": 0 }`. Centavos inteiros entre zero e 100000000000. A versão é aquela retornada pela leitura; zero só cria o primeiro registro.
+- `DELETE /api/budget-limits/{category}?month=YYYY-MM`: corpo `{ "version": 1 }`. Remove o limite ativo, preservando a versão contra edições antigas. Releia após cada escrita.
+
+Conflito retorna 409, entrada inválida 400, capacidade indisponível 503. Zero é limite explícito; `null` não é permitido no PUT. A exclusão não apaga despesas. Não há propagação automática entre meses. Percentual é null para limite zero ou ausente. Estados: `no-limit`, `no-records`, `within-limit`, `at-limit`, `exceeded`.
+
+Os totais usam a categoria efetiva de cada pagamento e a mesma competência do orçamento: vencimento, referência e data de criação, nessa ordem. Incluem despesas pagas e pendentes; excluem receitas, transferências e cancelamentos. Os valores observados não comprovam cobertura completa do mês; a UI explicita essa limitação.

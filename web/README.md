@@ -60,14 +60,14 @@ Com o backend Go configurado, o menu oferece:
 - **Classificar gastos:** corrigir um lançamento sem alterar outras parcelas, criar regras de descrição completa e revisar o alcance antes de reaplicar. Correções individuais sobrevivem à sincronização.
 - **Cartões e agenda:** saldo devedor e limites separados de compromissos manuais e estimativas. Fatura e quitação ficam indisponíveis quando a fonte não fornece evidência; uma data vencida não confirma pagamento.
 - **Revisão de gastos:** até três prioridades na visão geral, evidências e histórico na revisão completa, dispensar/restaurar sugestões e registrar/desfazer decisões. Economia potencial e observada são distintas; meses sem histórico não comprovam economia.
-- **Orçamento e metas:** metas de juntar, reduzir e reserva, correção fixa/variável/automática e projeções com premissas. Metas podem compartilhar o mesmo patrimônio; não reservam dinheiro separadamente. Limites por categoria ficam fora desta entrega.
+- **Orçamento e metas:** metas de juntar, reduzir e reserva, correção fixa/variável/automática e projeções com premissas. Metas podem compartilhar o mesmo patrimônio; não reservam dinheiro separadamente. Limites mensais por categoria permitem definir, editar e remover tetos, com despesas pagas/pendentes e conflitos de edição explícitos. Zero é um teto válido; ausência de lançamentos exige conferir a cobertura.
 - **Notificações:** preferências, prévia e histórico na aplicação; agendamento executado pelo Go, sem navegador aberto. O canal externo depende da configuração da instalação.
 - **Perguntas:** consultas prontas, calculadas no Go, com período, origem e links. Funcionam sem Gemini e não enviam um novo payload à IA.
 - **Importar extrato:** CSV/OFX de conta bancária em BRL, prévia, revisão de correspondências, confirmação e reversão por lote. Movimentos já conciliados com Open Finance são preservados na reversão.
 
-Aplique as migrations até `022` conforme o [README da instalação](../README.md#atualizando-uma-instalação-existente). O Go deve permanecer em execução para API e agendamentos. Os componentes de carteira/proventos/IA continuam nos documentos privados do Blob, protegidos pela sessão Go; token do Blob e chave de criptografia são necessários para essa capacidade. Posições de um snapshot cloud anterior aparecem com origem e data próprias, sem somá-las novamente às posições importadas no Go.
+Aplique as migrations até `023` conforme o [README da instalação](../README.md#atualizando-uma-instalação-existente). O Go deve permanecer em execução para API e agendamentos. Os componentes de carteira/proventos/IA continuam nos documentos privados do Blob, protegidos pela sessão Go; token do Blob e chave de criptografia são necessários para essa capacidade. Posições de um snapshot cloud anterior aparecem com origem e data próprias, sem somá-las novamente às posições importadas no Go.
 
-O [índice das dez tarefas](../docs/tasks/README.md) registra critérios, testes e limitações por entrega.
+O [índice das tarefas](../docs/tasks/README.md) registra critérios, testes e limitações por entrega.
 
 ## Organização
 

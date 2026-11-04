@@ -348,6 +348,7 @@ for f in backend/migrations/*.sql; do docker compose exec -T postgres psql -v ON
 | `021` | Preferências e histórico persistente de notificações |
 | `022` | Lotes de importação de extratos, conciliação e reversão |
 | `023` | Limites mensais por categoria, em centavos e com versão de edição |
+| `024` | Recibos e chaves persistentes para lançamento manual de despesa |
 
 Para habilitar limites mensais por categoria em uma instalação já migrada até `022`, aplique a migração seguinte antes de atualizar o backend:
 
@@ -356,6 +357,14 @@ docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U finassist -d finassis
 ```
 
 Em Orçamento, cada limite vale apenas para o mês selecionado. Despesas pagas e pendentes consomem o teto; receitas, transferências e cancelamentos são excluídos. Limite zero é explícito; remover um limite deixa a categoria sem teto e preserva as despesas. A cobertura depende dos lançamentos disponíveis. Veja [FA-12](docs/tasks/fa-12-limites-categoria.md).
+
+Para habilitar o lançamento rápido em uma instalação já migrada até `023`, aplique `024` antes de atualizar o backend:
+
+```sh
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U finassist -d finassist < backend/migrations/024_manual_expense_requests.sql
+```
+
+O lançamento manual registra despesa única paga no ledger Go, em conta BANK escolhida pela pessoa, e preserva a data financeira e a categoria explícita. O saldo informado da conta não é recalculado. Retentativas usam a mesma chave persistente; o modo cloud não grava lançamentos. A conciliação posterior depende de correspondência elegível e da ordem de chegada: um externo já salvo antes da entrada manual não é fundido automaticamente. Veja o [contrato e limites da API](docs/api.md#lançamento-manual-de-despesa-migration-024). A atualização dos arquivos não aplica migrations de produção automaticamente.
 
 **Quem já usava tudo pelo `.env`** (senha em `DASHBOARD_PASSWORD`, Telegram em `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, Pluggy, Gemini) não precisa mudar nada: o app não mostra o setup e o login continua igual. O que for salvo pela página Configurações passa a valer mais que o `.env`. Para poder usar a recuperação com `SETUP_REOPEN`, rode `make init` uma vez (ele só acrescenta o que falta).
 

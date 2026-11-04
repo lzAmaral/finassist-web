@@ -162,3 +162,131 @@ test('Go consulta recursos companion somente com armazenamento privado configura
   assert.ok(calls.includes(`analysis?month=${month}`));
   assert.equal(result.ai.configured, false);
 });
+
+test('análise cloud carrega o mês anterior e usa uma data de referência estável', async () => {
+  const calls = [];
+  const previous = { ...dashboard, month: '2026-09' };
+  const result = await load({
+    section: 'analise',
+    referenceDate: '2026-10-21',
+    fetchAPI: async (path) => {
+      calls.push(path);
+      if (path === 'me') return json({});
+      if (path === 'dashboard?month=2026-09') return json(previous);
+      if (path.startsWith('dashboard')) return json(dashboard);
+      return json({ configured: false, analysis: null });
+    }
+  });
+  assert.equal(result.referenceDate, '2026-10-21');
+  assert.equal(result.previousSpending.month, '2026-09');
+  assert.deepEqual(result.previousSpending.transactions, previous.transactions);
+  assert.equal(result.comparisonError, '');
+  assert.ok(calls.includes('analysis?month=2026-10'));
+});
+
+test('falha do histórico não impede a análise opcional nem apaga o mês atual', async () => {
+  const result = await load({
+    section: 'analise',
+    referenceDate: '2026-10-21',
+    fetchAPI: async (path) => {
+      if (path === 'me') return json({});
+      if (path === 'dashboard?month=2026-09') return json({}, 502);
+      if (path.startsWith('dashboard')) return json(dashboard);
+      return json({ configured: false, analysis: null });
+    }
+  });
+  assert.equal(result.app.status, 'ready');
+  assert.equal(result.dashboard.month, month);
+  assert.equal(result.previousSpending, null);
+  assert.ok(result.comparisonError);
+  assert.equal(result.featureError, '');
+  assert.equal(result.ai.configured, false);
+});
+
+test('histórico só é consultado na análise de meses que já começaram', async () => {
+  for (const [section, selected] of [
+    ['', month],
+    ['transacoes', month],
+    ['analise', '2026-11']
+  ]) {
+    const calls = [];
+    await load({
+      section,
+      month: selected,
+      referenceDate: '2026-10-21',
+      fetchAPI: async (path) => {
+        calls.push(path);
+        return json(path === 'me' ? {} : { ...dashboard, month: selected });
+      }
+    });
+    assert.equal(
+      calls.filter((path) => path.startsWith('dashboard?')).length,
+      1
+    );
+  }
+});
+
+test('sessão expirada ao ler histórico redireciona e não consulta recursos seguintes', async () => {
+  const calls = [];
+  const result = await load({
+    section: 'analise',
+    referenceDate: '2026-10-21',
+    fetchAPI: async (path) => {
+      calls.push(path);
+      if (path === 'me') return json({});
+      return path.endsWith('2026-09') ? json({}, 401) : json(dashboard);
+    }
+  });
+  assert.equal(result.redirectTo, '/login');
+  assert.equal(
+    calls.some((path) => path.startsWith('analysis?')),
+    false
+  );
+});
+
+test('histórico Go percorre todas as páginas e rejeita resultado parcial', async () => {
+  const entries = Array.from({ length: 101 }, (_, i) => ({
+    id: `anterior-${i}`
+  }));
+  for (const failSecond of [false, true]) {
+    const result = await load({
+      mode: 'go',
+      section: 'analise',
+      referenceDate: '2026-10-21',
+      fetchAPI: async (path) => {
+        const resource = path.split('?')[0];
+        if (resource === 'transactions' && path.includes('2026-09')) {
+          const page = Number(
+            new URLSearchParams(path.split('?')[1]).get('page')
+          );
+          if (failSecond && page === 2) return json({}, 502);
+          return json({
+            items: entries.slice((page - 1) * 100, page * 100),
+            total: 101,
+            limit: 100,
+            page
+          });
+        }
+        const values = {
+          me: {},
+          summary: dashboard.summary,
+          transactions: { items: [], total: 0, page: 1, limit: 100 },
+          breakdown: [],
+          timeseries: [],
+          balances: dashboard.balances,
+          budget: dashboard.budget,
+          goals: dashboard.goals
+        };
+        return json(values[resource]);
+      }
+    });
+    assert.equal(result.app.status, 'ready');
+    if (failSecond) {
+      assert.equal(result.previousSpending, null);
+      assert.ok(result.comparisonError);
+    } else {
+      assert.equal(result.previousSpending.transactions.items.length, 101);
+      assert.equal(result.previousSpending.month, '2026-09');
+    }
+  }
+});

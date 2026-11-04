@@ -1,13 +1,18 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { tick } from 'svelte';
   import type { PageProps } from './$types';
   import Icon from '#lib/Icon.svelte';
   import SpendingCharts from '#lib/components/SpendingCharts.svelte';
   import InvestmentPortfolio from '#lib/components/InvestmentPortfolio.svelte';
   import TransactionActivity from '#lib/components/TransactionActivity.svelte';
   import SpendingAnalysis from '#lib/components/SpendingAnalysis.svelte';
+  import SpendingComparison from '#lib/components/SpendingComparison.svelte';
+  import SpendingConcentration from '#lib/components/SpendingConcentration.svelte';
+  import SpendingAudit from '#lib/components/SpendingAudit.svelte';
   import SpendingReview from '#lib/components/SpendingReview.svelte';
   import ImportStatements from '#lib/components/ImportStatements.svelte';
+  import ManualEntry from '#lib/components/ManualEntry.svelte';
   import NotificationCenter from '#lib/components/NotificationCenter.svelte';
   import FinanceQuestions from '#lib/components/FinanceQuestions.svelte';
   import GoalsManager from '#lib/components/GoalsManager.svelte';
@@ -165,7 +170,7 @@
         <span class="breadcrumb">Meu espaço <span>/</span> {title}</span>
       </div>
       <div class="topbar-right">
-        {#if d.mode === 'live'}<Button
+        {#if d.mode === 'live' || data.app.authenticated}<Button
             variant="ghost"
             size="icon"
             onclick={() => (hidden = !hidden)}
@@ -244,6 +249,22 @@
             saídas. Pendências aparecem na lista.
           </p>{/if}
         {#if syncMessage}<p class="error" role="alert">{syncMessage}</p>{/if}
+      {/if}
+
+      {#if data.section === '' || data.section === 'transacoes'}
+        <ManualEntry
+          enabled={data.app.mode === 'go' && data.app.authenticated}
+          {hidden}
+          referenceDate={data.referenceDate}
+          onSaved={async (date) => {
+            await goto(`/transacoes?month=${date.slice(0, 7)}`, {
+              refreshAll: true
+            });
+            await tick();
+            if (data.app.status !== 'ready')
+              throw new Error('releitura indisponível');
+          }}
+        />
       {/if}
 
       {#if ready && data.section === ''}
@@ -353,6 +374,20 @@
           </section>{/if}
       {/if}
       {#if ready && data.section === 'analise'}
+        {#if data.comparisonError}<p class="error" role="alert">
+            {data.comparisonError}
+            <a href={`/analise?month=${d.month}`} data-sveltekit-reload
+              >Tentar novamente</a
+            >
+          </p>{/if}
+        <SpendingComparison
+          dashboard={d}
+          previous={data.previousSpending}
+          referenceDate={data.referenceDate}
+          {hidden}
+        />
+        <div class="mb-5"><SpendingConcentration dashboard={d} {hidden} /></div>
+        <div class="mb-5"><SpendingAudit dashboard={d} {hidden} /></div>
         {#if data.featureError}<p class="error" role="alert">
             {data.featureError}
             <a href={`/analise?month=${d.month}`}>Tentar novamente</a>

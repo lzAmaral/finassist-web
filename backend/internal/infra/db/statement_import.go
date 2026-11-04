@@ -328,8 +328,8 @@ func (r *TransactionsRepo) CreateStatementAccount(ctx context.Context, name stri
 	return id, err
 }
 
-// A sincronização revalida depois da trava usada pela confirmação: um lote pode
-// ter sido confirmado entre ReconcileExternal e SaveExternal.
+// A sincronização revalida após a trava de conta: uma importação ou despesa manual
+// pode ter sido confirmada entre ReconcileExternal e SaveExternal.
 func claimStatementExternal(ctx context.Context, tx pgx.Tx, purchase *domain.Purchase, payment *domain.Payment) (bool, error) {
 	if payment.AccountID == nil || payment.ExternalID == nil {
 		return false, nil
@@ -337,12 +337,19 @@ func claimStatementExternal(ctx context.Context, tx pgx.Tx, purchase *domain.Pur
 	if _, err := tx.Exec(ctx, `SELECT id FROM accounts WHERE id=$1 FOR UPDATE`, *payment.AccountID); err != nil {
 		return false, err
 	}
+	var exists bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM payments WHERE external_id=$1)`, *payment.ExternalID).Scan(&exists); err != nil {
+		return false, err
+	}
+	if exists {
+		return true, nil
+	}
 	day := payment.CreatedAt
 	if payment.DueDate != nil {
 		day = *payment.DueDate
 	}
 	var id string
-	err := tx.QueryRow(ctx, `SELECT pay.id::text FROM payments pay JOIN purchases p ON p.id=pay.purchase_id WHERE pay.account_id=$1 AND pay.external_id IS NULL AND pay.status<>'CANCELLED' AND p.kind=$2 AND p.type='SINGLE' AND ABS(pay.amount-$3)<0.005 AND ABS(COALESCE(pay.due_date,pay.created_at::date)-$4::date)<=3 AND EXISTS(SELECT 1 FROM statement_import_rows r WHERE r.payment_id=pay.id AND r.created AND r.active) ORDER BY pay.created_at,pay.id LIMIT 1 FOR UPDATE OF pay`, *payment.AccountID, purchase.Kind, payment.Amount, day).Scan(&id)
+	err := tx.QueryRow(ctx, `SELECT pay.id::text FROM payments pay JOIN purchases p ON p.id=pay.purchase_id WHERE pay.account_id=$1 AND pay.external_id IS NULL AND pay.status<>'CANCELLED' AND p.kind=$2 AND p.type='SINGLE' AND ABS(pay.amount-$3)<0.005 AND ABS(COALESCE(pay.due_date,pay.created_at::date)-$4::date)<=3 AND (EXISTS(SELECT 1 FROM statement_import_rows r WHERE r.payment_id=pay.id AND r.created AND r.active) OR EXISTS(SELECT 1 FROM manual_expense_requests m WHERE m.payment_id=pay.id)) ORDER BY pay.created_at,pay.id LIMIT 1 FOR UPDATE OF pay`, *payment.AccountID, purchase.Kind, payment.Amount, day).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}

@@ -7,3 +7,4 @@ backups/*
 !backups/.gitkeep
 secrets/*
 !secrets/.gitkeep
+.neon

@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+.git
+secrets/
+backups/
+*.dump
+*.log
+coverage*
+finassist

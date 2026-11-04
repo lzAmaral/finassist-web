@@ -149,6 +149,7 @@ func (a *api) transactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) registerTransactions(rt routes) {
+	rt.mux.Handle("POST /api/transactions/manual", rt.protected(jsonOnly(a.manualExpense)))
 	rt.mux.Handle("GET /api/transactions", rt.protected(a.transactions))
 	rt.mux.Handle("GET /api/transactions/groups", rt.protected(a.transactionGroups))
 }

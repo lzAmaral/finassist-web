@@ -18,6 +18,8 @@ O CI do backend aplica migrations em Postgres descartável, roda testes e lint. 
 
 O CD usa a integração nativa GitHub/Vercel, sem duplicar deploys em GitHub Actions ou adicionar tokens de deploy ao repositório. Projeto `finassist-web`, Root Directory `web`, Production Branch `main`. O backend Go e o Docker Compose não são implantados por esse fluxo.
 
+Para habilitar o backend em nuvem, o [roteiro Render + Neon](deploy-gratuito.md) e o `render.yaml` preparam um serviço Free separado, acompanhando `main` após os checks. Essa infraestrutura precisa ser provisionada antes de configurar `FINASSIST_API_URL` na Vercel; adicionar o Blueprint ao repositório não ativa o backend por si só.
+
 ## Trabalho diário
 
 ```sh

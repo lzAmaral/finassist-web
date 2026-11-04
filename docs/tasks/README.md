@@ -2,7 +2,7 @@
 
 Este é o ponto de entrada para executar e retomar as tarefas. O [plano de produto](../plano-melhorias-produto.md) preserva pesquisa, diagnóstico e direção. **Os arquivos individuais são a fonte do escopo, checklists e evidências de cada tarefa.**
 
-Preparado em 21/10/2026. Progresso: **11 de 17 tarefas concluídas** (primeira etapa: 10/10; segunda etapa: 1/7). Primeira etapa implementada por agentes GPT-6.1 Sol (high), com integração e validação pelo coordenador. Veja o [relatório integrado](validacao-integrada.md). Primeira etapa integrada em `main` no commit `19e1ec5` e publicada no web. A ativação do backend é acompanhada separadamente na FA-17.
+Preparado em 21/10/2026; atualizado em 04/11/2026. Progresso: **15 de 25 tarefas concluídas** (primeira etapa: 10/10; segunda etapa: 1/7; controle de gastos: 3/3; registro cotidiano: 1/5). Primeira etapa implementada por agentes GPT-6.1 Sol (high), com integração e validação pelo coordenador. Veja o [relatório integrado](validacao-integrada.md). Primeira etapa integrada em `main` no commit `19e1ec5` e publicada no web. A ativação do backend é acompanhada separadamente na FA-17.
 
 ## Índice e dependências
 
@@ -96,3 +96,38 @@ Backlog autorizado pelo usuário. FA-12 concluída usando dados e contratos já 
 - [ ] [FA-15 — Importação de extratos de cartão](fa-15-extratos-cartao.md)
 - [ ] [FA-16 — União de contas locais e conectadas](fa-16-uniao-contas.md)
 - [ ] [FA-17 — Ativação operacional do backend](fa-17-ativacao-backend.md)
+
+## Controle de gastos — rodada de 04/11/2026
+
+Escopo ajustado por Astra após [pesquisa de mercado e inspeção do código](../pesquisa-controle-gastos-2026-11.md). Três tarefas implementadas em paralelo por agentes GPT-6.1 Sol (high), com integração pelo coordenador. [Validação integrada da rodada](validacao-controle-gastos-2026-11.md). Funcionam com lançamentos disponíveis tanto no cloud quanto no Go. Hospedagem e multiusuário permanecem fora desta rodada. Não duplicam limites, planejamento ou revisão de recorrências já existentes no Go.
+
+| ID | Tarefa | Prioridade | Status | Dependências |
+| --- | --- | --- | --- | --- |
+| FA-18 | [Comparação de gastos em períodos equivalentes](fa-18-comparacao-gastos.md) | P1 | Concluída | Dashboard/Transaction; carga anterior opcional pelo coordenador |
+| FA-19 | [Concentração de despesas com evidências](fa-19-concentracao-despesas.md) | P1 | Concluída | Dashboard/Transaction; integração em Análise |
+| FA-20 | [Auditoria da base de gastos](fa-20-auditoria-base-gastos.md) | P1 | Concluída | Dashboard/Transaction; integração em Análise |
+
+- [x] [FA-18 — Comparar gastos em períodos equivalentes](fa-18-comparacao-gastos.md)
+- [x] [FA-19 — Conferir concentração de despesas com evidências](fa-19-concentracao-despesas.md)
+- [x] [FA-20 — Auditar a base da análise de gastos](fa-20-auditoria-base-gastos.md)
+
+Os agentes editam apenas seus helpers, componentes, testes e documento individual, conforme ownership registrado em cada tarefa. O coordenador edita rotas, loader, testes integrados e este índice. Não marcar uma tarefa como concluída apenas porque o componente isolado foi entregue: integração, estados de falha e validação visual também fazem parte do aceite.
+
+
+## Registro cotidiano — referência Money Flow
+
+[Escopo e ordem desta rodada](registro-cotidiano/README.md), ajustados por Astra; implementação por GPT-6.1 Sol (high). Hospedagem continua na FA-17.
+
+| ID | Tarefa | Status |
+| --- | --- | --- |
+| FA-21 | [Lançamento rápido](registro-cotidiano/fa-21-lancamento-rapido.md) | Concluída |
+| FA-22 | [Conferir, corrigir e desfazer registros](registro-cotidiano/fa-22-conferir-corrigir-desfazer.md) | Pendente |
+| FA-23 | [Registrar por áudio no Telegram](registro-cotidiano/fa-23-audio-telegram.md) | Pendente |
+| FA-24 | [Aplicar período e conta de forma coerente](registro-cotidiano/fa-24-filtros-globais.md) | Pendente |
+| FA-25 | [Planejar despesas anuais e não mensais](registro-cotidiano/fa-25-despesas-anuais.md) | Pendente |
+
+- [x] [FA-21 — Lançamento rápido](registro-cotidiano/fa-21-lancamento-rapido.md)
+- [ ] [FA-22 — Conferir, corrigir e desfazer](registro-cotidiano/fa-22-conferir-corrigir-desfazer.md)
+- [ ] [FA-23 — Áudio no Telegram](registro-cotidiano/fa-23-audio-telegram.md)
+- [ ] [FA-24 — Filtros globais](registro-cotidiano/fa-24-filtros-globais.md)
+- [ ] [FA-25 — Despesas anuais](registro-cotidiano/fa-25-despesas-anuais.md)

@@ -1,5 +1,12 @@
 # Changelog
 
+## Em desenvolvimento — 04/11/2026
+
+- Análise de gastos com comparação explícita de períodos: no mês corrente, usa o mesmo número de dias e considera a data da consulta cloud; histórico indisponível não vira zero.
+- Concentração de compras por descrição exata e conta, separando compras, estornos e líquido, com lançamentos de origem expansíveis.
+- Conferência de despesas pendentes, categorias amplas/ausentes e estornos confirmados, com valores separados e links conforme o modo ativo.
+- Pesquisa de mercado e tarefas FA-18–FA-20 documentadas. Recursos de consulta para cloud e Go, sem novas migrations ou alteração de hospedagem.
+
 ## Em desenvolvimento — 23/10/2026
 
 - Limites mensais por categoria no orçamento Svelte: criar, editar e remover, separando valores pagos/pendentes, restante e excesso. Cálculos em centavos no Go, categorias corrigidas preservadas e conflito de edição sinalizado. Sem dados registrados não significa economia comprovada.

@@ -6,6 +6,9 @@
   import InvestmentPortfolio from '#lib/components/InvestmentPortfolio.svelte';
   import TransactionActivity from '#lib/components/TransactionActivity.svelte';
   import SpendingAnalysis from '#lib/components/SpendingAnalysis.svelte';
+  import SpendingComparison from '#lib/components/SpendingComparison.svelte';
+  import SpendingConcentration from '#lib/components/SpendingConcentration.svelte';
+  import SpendingAudit from '#lib/components/SpendingAudit.svelte';
   import SpendingReview from '#lib/components/SpendingReview.svelte';
   import ImportStatements from '#lib/components/ImportStatements.svelte';
   import NotificationCenter from '#lib/components/NotificationCenter.svelte';
@@ -353,6 +356,20 @@
           </section>{/if}
       {/if}
       {#if ready && data.section === 'analise'}
+        {#if data.comparisonError}<p class="error" role="alert">
+            {data.comparisonError}
+            <a href={`/analise?month=${d.month}`} data-sveltekit-reload
+              >Tentar novamente</a
+            >
+          </p>{/if}
+        <SpendingComparison
+          dashboard={d}
+          previous={data.previousSpending}
+          referenceDate={data.referenceDate}
+          {hidden}
+        />
+        <div class="mb-5"><SpendingConcentration dashboard={d} {hidden} /></div>
+        <div class="mb-5"><SpendingAudit dashboard={d} {hidden} /></div>
         {#if data.featureError}<p class="error" role="alert">
             {data.featureError}
             <a href={`/analise?month=${d.month}`}>Tentar novamente</a>

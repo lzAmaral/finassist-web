@@ -37,6 +37,10 @@ O custo de uma posição importada usa `amountOriginal` quando disponível. O ca
 
 ## Análise de gastos e Gemini
 
+A análise inclui comparação de períodos, concentração por descrição e conferência da base de gastos, tanto no modo cloud quanto no Go. No mês corrente, a comparação usa o mesmo número de dias nos dois meses e limita o corte à consulta cloud quando disponível. Meses anteriores são comparados por inteiro, com intervalos explícitos. Falha ao ler o histórico mantém o mês atual visível e oferece nova tentativa; um mês sem lançamentos não comprova ausência de gastos bancários.
+
+Os grupos por descrição usam igualdade exata e mantêm contas distintas separadas; não identificam automaticamente estabelecimentos ou assinaturas. Compras, estornos e líquido aparecem separados, com evidências expansíveis. A conferência mostra pendências, Outros/sem categoria e estornos confirmados; os grupos podem se sobrepor e não devem ser somados. Estornos já reduzem as despesas, e Outros pode ser uma escolha válida. Ocultar valores também mascara os números e percentuais desses recursos. Essas leituras não enviam dados novos ao Gemini.
+
 A análise local calcula saldo do período, parcela da renda que sobrou, comparação com o mês anterior, categorias e simulação de redução de despesas. Funciona sem serviço de IA.
 
 A integração Google Gemini é opcional: configure a chave no campo privado da aba Análise de gastos ou no segredo de runtime `GEMINI_API_KEY`. `GEMINI_MODEL` permite escolher o modelo; o padrão é `gemini-3.8-flash`. A chave configurada no app fica criptografada, nunca é retornada nas respostas e não altera o faturamento do Google. Para usar somente a cota gratuita, use um projeto sem faturamento e verifique a disponibilidade e limites na sua conta.

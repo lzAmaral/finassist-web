@@ -3,6 +3,7 @@ import type { Dashboard } from '../finance.js';
 import { shiftMonth } from '../finance.ts';
 import type { Portfolio } from '../investments.js';
 import type { GeminiAnalysis } from '../analysis.js';
+import type { PreviousSpendingPeriod } from '../spending-comparison.js';
 import { dashboardState, type DataMode } from '../dashboard-state.ts';
 import { emptyDashboard } from './empty.ts';
 import { loadAllTransactions } from './transaction-pages.ts';
@@ -23,13 +24,17 @@ export async function loadDashboardPage({
   month,
   section,
   fetchAPI,
-  privateStorage = false
+  privateStorage = false,
+  referenceDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo'
+  }).format(new Date())
 }: {
   mode: DataMode;
   month: string;
   section: string;
   fetchAPI: (path: string) => Promise<Response>;
   privateStorage?: boolean;
+  referenceDate?: string;
 }) {
   let authenticated = false;
   const result = {
@@ -48,6 +53,9 @@ export async function loadDashboardPage({
       model: string;
     } | null,
     agenda: null as CardAgendaData | null,
+    referenceDate,
+    previousSpending: null as PreviousSpendingPeriod | null,
+    comparisonError: '',
     featureError: '',
     redirectTo: ''
   };
@@ -113,6 +121,38 @@ export async function loadDashboardPage({
       );
     }
     return result;
+  }
+  // O histórico é opcional: uma falha não deve esconder o mês nem a análise de IA.
+  if (section === 'analise' && month <= referenceDate.slice(0, 7)) {
+    const previousMonth = shiftMonth(month, -1);
+    try {
+      if (mode === 'cloud') {
+        const previous: Dashboard = await get(
+          `dashboard?month=${previousMonth}`
+        );
+        if (previous.mode !== 'live' || previous.month !== previousMonth)
+          throw new Error('histórico indisponível');
+        result.previousSpending = {
+          month: previousMonth,
+          transactions: previous.transactions
+        };
+      } else {
+        result.previousSpending = {
+          month: previousMonth,
+          transactions: await loadAllTransactions(get, previousMonth)
+        };
+      }
+    } catch (failure) {
+      if (
+        failure instanceof ReadFailure &&
+        [401, 409].includes(failure.status)
+      ) {
+        result.redirectTo = failure.status === 401 ? '/login' : '/setup';
+        return result;
+      }
+      result.comparisonError =
+        'Não foi possível carregar o mês anterior. Tente novamente.';
+    }
   }
   // Falhas de um recurso opcional não apagam o resumo que já foi carregado.
   try {

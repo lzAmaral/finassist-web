@@ -1,0 +1,28 @@
+# Produção segue main, após o PR dev → main e os checks obrigatórios.
+# Aplique as migrations no Neon antes de criar o serviço (docs/deploy-gratuito.md).
+services:
+  - type: web
+    name: finassist-api
+    runtime: docker
+    plan: free
+    region: virginia
+    branch: main
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_SECRET_KEY
+        generateValue: true
+      - key: SETUP_TOKEN
+        generateValue: true
+      - key: CHANNEL
+        value: telegram
+      - key: DASHBOARD_2FA
+        value: auto
+      - key: DIGEST_TIMEZONE
+        value: America/Sao_Paulo
+      - key: GEMINI_PAID_PLAN
+        value: "false"

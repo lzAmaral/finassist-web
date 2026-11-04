@@ -67,8 +67,8 @@
   }
 </script>
 
-<div class="grid gap-4 sm:grid-cols-3 mb-5">
-  {#each [{ label: 'Quanto sobrou', value: display(stats.surplus), note: 'Entradas menos despesas confirmadas' }, { label: 'Parcela da renda que sobrou', value: hidden ? '••••' : stats.savingsRate === null ? 'Sem renda informada' : `${stats.savingsRate.toFixed(1)}%`, note: 'Percentual do mês selecionado' }, { label: 'Despesas vs. mês anterior', value: hidden ? '••••' : stats.expenseChange === null ? 'Sem base anterior' : `${stats.expenseChange > 0 ? '+' : ''}${stats.expenseChange.toFixed(1)}%`, note: 'O mês atual pode estar incompleto' }] as metric}<Card.Root
+<div class="grid gap-4 sm:grid-cols-2 mb-5">
+  {#each [{ label: 'Quanto sobrou', value: display(stats.surplus), note: 'Entradas menos despesas confirmadas' }, { label: 'Parcela da renda que sobrou', value: hidden ? '••••' : stats.savingsRate === null ? 'Sem renda informada' : `${stats.savingsRate.toFixed(1)}%`, note: 'Percentual do mês selecionado' }] as metric}<Card.Root
       class="gap-3 shadow-none"
       ><Card.Header
         ><Card.Description>{metric.label}</Card.Description></Card.Header

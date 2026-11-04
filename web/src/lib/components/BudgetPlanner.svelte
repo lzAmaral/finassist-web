@@ -13,6 +13,7 @@
   import * as Card from '#lib/components/ui/card/index.js';
   import { Button } from '#lib/components/ui/button/index.js';
   import { Badge } from '#lib/components/ui/badge/index.js';
+  import CategoryBudgetLimits from '#lib/components/CategoryBudgetLimits.svelte';
 
   let {
     enabled,
@@ -128,6 +129,7 @@
       ></Card.Root
     >
   {:else}
+    <CategoryBudgetLimits {month} {hidden} />
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h2 class="text-lg font-semibold">Seu mês em perspectiva</h2>
@@ -421,9 +423,9 @@
       </Card.Content></Card.Root
     >
     <p class="text-xs text-muted-foreground">
-      Este orçamento organiza classes e estima a sobra. Limites de gasto por
-      categoria ainda não estão disponíveis. Consulte a agenda para compromissos
-      registrados e confira o que não entrou no histórico.
+      Este orçamento organiza classes, acompanha limites e estima a sobra.
+      Consulte a agenda para compromissos registrados e confira o que não entrou
+      no histórico.
     </p>
   {/if}
 </div>

@@ -1,5 +1,15 @@
 # Changelog
 
+## Em desenvolvimento — 23/10/2026
+
+- Limites mensais por categoria no orçamento Svelte: criar, editar e remover, separando valores pagos/pendentes, restante e excesso. Cálculos em centavos no Go, categorias corrigidas preservadas e conflito de edição sinalizado. Sem dados registrados não significa economia comprovada.
+- Backlog FA-11–FA-17 em `docs/tasks/`, com critérios de aceite e dependências. FA-12 é a primeira implementação desta etapa.
+- Instalações já migradas até `022` precisam de `023` antes de habilitar os limites. Não há migração automática de produção:
+
+```sh
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U finassist -d finassist < backend/migrations/023_category_budget_limits.sql
+```
+
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Não lançado]

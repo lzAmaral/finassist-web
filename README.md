@@ -347,6 +347,15 @@ for f in backend/migrations/*.sql; do docker compose exec -T postgres psql -v ON
 | `020` | Correções individuais de categoria preservadas na sincronização |
 | `021` | Preferências e histórico persistente de notificações |
 | `022` | Lotes de importação de extratos, conciliação e reversão |
+| `023` | Limites mensais por categoria, em centavos e com versão de edição |
+
+Para habilitar limites mensais por categoria em uma instalação já migrada até `022`, aplique a migração seguinte antes de atualizar o backend:
+
+```sh
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U finassist -d finassist < backend/migrations/023_category_budget_limits.sql
+```
+
+Em Orçamento, cada limite vale apenas para o mês selecionado. Despesas pagas e pendentes consomem o teto; receitas, transferências e cancelamentos são excluídos. Limite zero é explícito; remover um limite deixa a categoria sem teto e preserva as despesas. A cobertura depende dos lançamentos disponíveis. Veja [FA-12](docs/tasks/fa-12-limites-categoria.md).
 
 **Quem já usava tudo pelo `.env`** (senha em `DASHBOARD_PASSWORD`, Telegram em `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, Pluggy, Gemini) não precisa mudar nada: o app não mostra o setup e o login continua igual. O que for salvo pela página Configurações passa a valer mais que o `.env`. Para poder usar a recuperação com `SETUP_REOPEN`, rode `make init` uma vez (ele só acrescenta o que falta).
 

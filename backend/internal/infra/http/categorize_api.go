@@ -18,10 +18,7 @@ import (
 const maxUncategorized = 60
 
 // ruleCategories são as categorias que uma conta pode receber; OTHER significa "manter em Outros".
-var ruleCategories = []domain.Category{
-	domain.CategoryFood, domain.CategoryMarket, domain.CategoryTransport, domain.CategoryHealth, domain.CategoryEntertainment,
-	domain.CategoryShopping, domain.CategoryHousing, domain.CategoryBills, domain.CategoryEducation, domain.CategoryPeople, domain.CategoryOther,
-}
+var ruleCategories = domain.ExpenseCategories()
 
 // categorizeAI monta o que iria à IA (contas de comércio e serviços, nunca Pix) e o hash que a pessoa confere.
 func (a *api) categorizeAI(ctx context.Context) (coach.CategorizeContext, []byte, string, []domain.UncategorizedGroup, error) {

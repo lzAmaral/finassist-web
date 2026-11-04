@@ -147,6 +147,7 @@ func (a *api) setExpenseRule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) registerBudget(rt routes) {
+	a.registerCategoryBudgets(rt)
 	rt.mux.Handle("GET /api/budget", rt.protected(a.budget))
 	rt.mux.Handle("GET /api/projection", rt.protected(a.projection))
 	rt.mux.Handle("PUT /api/expense-rules", rt.protected(jsonOnly(a.setExpenseRule)))

@@ -1,6 +1,6 @@
 # API do dashboard
 
-O app expõe uma API JSON sob `/api`, **somente leitura** (as únicas escritas, além do login e do setup, são a correção manual de contas fixas, dispensar sugestões da revisão criar ou apagar metas e o histórico do Coach (análises e respostas)), que alimenta o front-end. A senha é a definida no setup (hash argon2id no banco) ou, sem ela, a `DASHBOARD_PASSWORD` (mínimo de 12 caracteres).
+O app expõe uma API JSON sob `/api`, com leituras do painel e escritas autenticadas de lançamentos, classificação, orçamento, importação e preferências. A senha é a definida no setup (hash argon2id no banco) ou, sem ela, a `DASHBOARD_PASSWORD` (mínimo de 12 caracteres).
 
 - **Setup pendente:** enquanto o app não está configurado (sem senha ou sem canal, ou com `SETUP_REOPEN`), só `/api/setup/*` atende; o resto de `/api`, inclusive o login, responde `409 {"error": "configuração inicial pendente", "setup": "required"}` e o front leva para `/setup`. Rotas na seção *Setup* abaixo.
 
@@ -17,6 +17,7 @@ O app expõe uma API JSON sob `/api`, **somente leitura** (as únicas escritas, 
 | `GET /api/breakdown?month=&by=category\|payment_method\|account` | despesas do mês agrupadas |
 | `GET /api/investments?from=&to=` | aplicado, resgatado e **líquido acumulado desde o primeiro lançamento** |
 | `GET /api/transactions?month=&kind=&category=&payment_method=&account=&q=&page=&limit=` | lista paginada (padrão 50, máx. 100), manual e Open Finance |
+| `POST /api/transactions/manual` | despesa única paga em conta BANK, com idempotência persistente por `requestId` (migration `024`) |
 | `GET /api/accounts` | contas e cartões, com saldo e limite |
 | `GET /api/balances` | painel: total em conta, bancos, contas e cartões (saldo devedor, limite, vencimento) |
 | `GET /api/institutions/{id}/logo` | logo do banco em cache |
@@ -41,6 +42,45 @@ O app expõe uma API JSON sob `/api`, **somente leitura** (as únicas escritas, 
 | `GET /api/portfolio/history?from=&to=` | saldo total ao fim de cada mês (existe a partir da primeira sincronização) |
 
 - **Segurança:** a porta `3000` do app é publicada só em `127.0.0.1`. Para acessar de outra máquina, ponha um proxy com **HTTPS** na frente (sem HTTPS a senha e o cookie trafegam em claro) e repasse `X-Real-IP` e `X-Forwarded-Proto`, usados pelo rate limit e pelo atributo `Secure` do cookie; esses cabeçalhos só são aceitos de IPs da rede privada.
+
+### Lançamento manual de despesa (migration `024`)
+
+`POST /api/transactions/manual` exige sessão, `Content-Type: application/json` e a mesma origem das demais escritas. O corpo deve conter um único objeto, sem campos desconhecidos:
+
+```json
+{
+  "requestId": "c6a172aa-ed53-4c84-9068-2a2205e823fd",
+  "amountCents": 12345,
+  "description": "Compra sintética",
+  "date": "2026-11-04",
+  "accountId": "e9c256ea-7bc6-4ffb-8e99-289cfb5f81bd",
+  "category": "MARKET",
+  "paymentMethod": "PIX"
+}
+```
+
+`requestId` e `accountId` são UUIDs não nulos. `amountCents` é inteiro entre 1 e 999999999999, sem fração de centavo. A descrição tem 1–200 caracteres depois de remover espaços nas pontas. A data civil deve ser válida, no formato AAAA-MM-DD, desde 2000-01-01 até hoje em `America/Sao_Paulo`. O limite inferior acompanha o calendário suportado pela web. A conta precisa existir e ser `BANK`, incluindo contas locais da importação de extrato; `CREDIT` é recusada. Categorias aceitas: FOOD, MARKET, TRANSPORT, HEALTH, ENTERTAINMENT, SHOPPING, HOUSING, BILLS, EDUCATION, PEOPLE e OTHER. Meios aceitos: PIX, DEBIT_CARD, CASH e OTHER.
+
+A primeira gravação retorna **201**; uma repetição idêntica retorna **200**, com os mesmos IDs e `replayed: true`:
+
+```json
+{
+  "id": "UUID do pagamento listado em GET /api/transactions",
+  "purchaseId": "UUID da compra",
+  "requestId": "UUID enviado",
+  "date": "2026-11-04",
+  "amountCents": 12345,
+  "replayed": false
+}
+```
+
+O servidor normaliza a descrição e a representação dos UUIDs antes de calcular o hash canônico. Chave, hash, recibo, compra e pagamento são gravados na mesma transação PostgreSQL; retentativas e concorrência sobrevivem à reabertura da conexão e ao reinício do processo. A chave vale para a instalação inteira. A mesma chave com outro conteúdo normalizado retorna **409**. A UI precisa manter chave e conteúdo quando a resposta for incerta e reenviar o mesmo objeto para recuperar a confirmação.
+
+A compra é sempre `EXPENSE`/`SINGLE`; o pagamento é `PAID`, vinculado à conta e com `due_date` igual ao dia escolhido. `created_at` permanece a auditoria da gravação. A categoria é registrada como escolha manual por pagamento e prevalece sobre regras automáticas, inclusive após sincronização. O saldo informado da conta permanece inalterado. Não aceita receitas, transferências, parcelas, recorrências ou cartão de crédito.
+
+Entrada ou conta inválida retorna **400**; sessão ausente, **401**; origem ou tipo de conteúdo recusado, **403**; modo sem writer Go persistente, **503**. Falhas inesperadas retornam o erro genérico da API, sem detalhes internos.
+
+**Conciliação tem limites:** se o manual for confirmado primeiro, a sincronização pode vincular um lançamento elegível da mesma conta, tipo e valor em até três dias, preservando o dia financeiro e a categoria manual. `SaveExternal` revalida sob a mesma trava de conta, cobrindo o intervalo entre consulta e gravação. Se o externo já tiver sido gravado antes do manual, a entrada intencional cria outro pagamento: não se fundem fatos financeiros nem se reescreve um externo por coincidência de valor/data. Essa ordem pode produzir duplicata; a heurística também não prova identidade entre duas despesas reais parecidas. Não há garantia de conciliação completa.
 
 ### Setup (exige a migration `019`; concluído, todas respondem `404`)
 

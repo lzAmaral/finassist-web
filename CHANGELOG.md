@@ -2,6 +2,14 @@
 
 ## Em desenvolvimento — 04/11/2026
 
+- API `POST /api/transactions/manual`: despesa única paga em conta BANK, centavos inteiros, data civil brasileira e categoria explícita preservada. Recibo e `requestId` persistem atomicamente com compra/pagamento, incluindo retentativas concorrentes e conflito de conteúdo. Não altera o saldo informado da conta.
+- Sincronização revalida entradas manuais sob a trava de conta antes de salvar um externo; se o externo chegar primeiro, o manual intencional permanece separado. Conciliação depende dos dados e não é infalível.
+- Instalações já migradas até `023` precisam de `024` para habilitar o lançamento manual. A atualização de arquivos não migra produção:
+
+```sh
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U finassist -d finassist < backend/migrations/024_manual_expense_requests.sql
+```
+
 - Análise de gastos com comparação explícita de períodos: no mês corrente, usa o mesmo número de dias e considera a data da consulta cloud; histórico indisponível não vira zero.
 - Concentração de compras por descrição exata e conta, separando compras, estornos e líquido, com lançamentos de origem expansíveis.
 - Conferência de despesas pendentes, categorias amplas/ausentes e estornos confirmados, com valores separados e links conforme o modo ativo.

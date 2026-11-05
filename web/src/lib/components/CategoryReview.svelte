@@ -227,7 +227,7 @@
   }
   h2 {
     font-size: 1.45rem;
-    font-weight: 650;
+    font-weight: 500;
     margin: 0.25rem 0 0.5rem;
   }
   h3 {
@@ -243,9 +243,9 @@
     line-height: 1.7;
   }
   .eyebrow {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    text-transform: none;
+    letter-spacing: 0;
     color: #7568cc;
   }
   .help,
@@ -287,7 +287,7 @@
   }
   .notice {
     border-radius: 0.75rem;
-    background: #f1f0fa;
+    background: var(--muted);
     padding: 1rem;
   }
   button {

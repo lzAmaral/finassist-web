@@ -4,23 +4,23 @@
 
 :root {
   --radius: 0.8rem;
-  --background: #f7f9f8;
-  --foreground: #1c3028;
+  --background: #f8f9f8;
+  --foreground: #252a27;
   --card: #fff;
-  --card-foreground: #1c3028;
+  --card-foreground: #252a27;
   --popover: #fff;
-  --popover-foreground: #1c3028;
+  --popover-foreground: #252a27;
   --primary: #286147;
   --primary-foreground: #fff;
-  --secondary: #edf3ef;
-  --secondary-foreground: #285a43;
-  --muted: #f0f3f1;
-  --muted-foreground: #6b7c73;
-  --accent: #e9f3ec;
-  --accent-foreground: #285a43;
+  --secondary: #f0f2f0;
+  --secondary-foreground: #37433b;
+  --muted: #f0f2f0;
+  --muted-foreground: #626b65;
+  --accent: #edf1ee;
+  --accent-foreground: #37433b;
   --destructive: #b44142;
-  --border: #e3eae5;
-  --input: #dce5df;
+  --border: #e1e5e2;
+  --input: #d2d9d4;
   --ring: #65a183;
   --chart-1: #32785a;
   --chart-2: #88b6a1;
@@ -67,21 +67,21 @@ body {
   border-color: var(--border);
 }
 .workspace-label {
-  padding-top: 30px;
+  padding-top: 32px;
 }
 nav a {
   font-size: 13px;
 }
 nav a.active {
-  background: #eaf3ed;
+  background: #edf1ee;
   color: #286147;
-  box-shadow: inset 3px 0 #32785a;
+  box-shadow: inset 2px 0 var(--primary);
 }
 .sidebar-bottom {
   padding-top: 24px;
 }
 .topbar {
-  background: rgb(255 255 255 / 0.85);
+  background: var(--card);
   border-color: var(--border);
   height: 72px;
 }
@@ -94,8 +94,8 @@ nav a.active {
   padding-bottom: 28px;
 }
 .eyebrow {
-  font-size: 9px;
-  letter-spacing: 1.6px;
+  font-size: 12px;
+  letter-spacing: 0;
 }
 .page-heading p {
   font-size: 13px;
@@ -112,7 +112,7 @@ nav a.active {
   border: 1px solid #dceadd;
   background: #eef5ef;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 12px;
   gap: 16px;
   margin-bottom: 12px;
 }
@@ -122,7 +122,7 @@ nav a.active {
 }
 .fine-print {
   margin: 12px 0 24px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.65;
   color: var(--muted-foreground);
 }
@@ -132,26 +132,27 @@ nav a.active {
 }
 .metric {
   border-color: var(--border);
-  border-radius: 13px;
+  border-radius: 12px;
   box-shadow: 0 1px 2px rgb(25 48 36 / 0.015);
 }
 .balance-metric {
-  background: linear-gradient(135deg, #285f46, #39775b);
-  border: 0;
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
 }
 .metric-value {
   font-size: clamp(24px, 2vw, 34px);
-  letter-spacing: -1.4px;
+  letter-spacing: 0;
 }
 .metric-label {
   font-size: 12px;
 }
 .metric-foot {
-  font-size: 11px;
+  font-size: 12px;
 }
 .panel {
   border-color: var(--border);
-  border-radius: 13px;
+  border-radius: 12px;
 }
 .panel-heading h2 {
   font-size: 16px;
@@ -166,7 +167,7 @@ nav a.active {
   width: auto;
   max-width: 100%;
   height: 36px;
-  padding: 0 10px;
+  padding: 0 8px;
   background: var(--card);
   border: 1px solid var(--input);
   border-radius: 8px;
@@ -193,13 +194,13 @@ nav a.active {
 .portfolio-table th {
   background: #f8faf8;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   padding: 12px 20px;
   white-space: nowrap;
 }
 .portfolio-table td {
-  padding: 17px 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   white-space: nowrap;
@@ -211,8 +212,8 @@ nav a.active {
 }
 .portfolio-table td small {
   display: block;
-  margin-top: 5px;
-  font-size: 10px;
+  margin-top: 4px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .portfolio-table tbody tr:hover {
@@ -221,9 +222,9 @@ nav a.active {
 .analysis-observation {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 18px;
+  padding-bottom: 16px;
 }
 .analysis-observation:last-child {
   border: 0;
@@ -233,7 +234,7 @@ nav a.active {
   color: #32785a;
   font-size: 12px;
   background: #edf5ef;
-  padding: 8px 9px;
+  padding: 8px 8px;
   border-radius: 8px;
   font-weight: 600;
 }
@@ -242,7 +243,7 @@ nav a.active {
   font-weight: 600;
 }
 .analysis-observation p {
-  margin-top: 7px;
+  margin-top: 8px;
   font-size: 12px;
   line-height: 1.8;
   color: var(--muted-foreground);
@@ -252,7 +253,7 @@ nav a.active {
     width: 76px;
   }
   .sidebar nav a {
-    padding: 14px;
+    padding: 16px;
   }
   .main-content {
     padding-inline: 22px;
@@ -267,10 +268,10 @@ nav a.active {
     height: 76px;
   }
   .sidebar nav a {
-    padding: 14px 7px;
+    padding: 16px 8px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
   }
   .sidebar nav a > span:not(.nav-dot) {
     display: block;
@@ -278,7 +279,7 @@ nav a.active {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-size: 7px;
+    font-size: 12px;
   }
   .sidebar nav a .nav-dot {
     display: none;
@@ -291,11 +292,11 @@ nav a.active {
     height: 19px;
   }
   .main-content {
-    padding: 24px 15px 92px;
+    padding: 24px 16px 92px;
   }
   .connection-banner {
     flex-wrap: wrap;
-    font-size: 10px;
+    font-size: 12px;
   }
   .connection-banner > span {
     max-width: 100%;
@@ -308,10 +309,10 @@ nav a.active {
     font-size: 12px;
   }
   .fine-print {
-    font-size: 10px;
+    font-size: 12px;
   }
   .metric {
-    padding: 18px 16px;
+    padding: 16px 16px;
     min-height: 155px;
   }
   .metric-value {
@@ -319,10 +320,10 @@ nav a.active {
   }
   .metric-label,
   .metric-foot {
-    font-size: 10px;
+    font-size: 12px;
   }
   .metrics {
-    gap: 10px;
+    gap: 8px;
   }
   .page-heading {
     margin-bottom: 20px;
@@ -331,6 +332,81 @@ nav a.active {
     gap: 8px;
   }
   .breadcrumb {
-    font-size: 10px;
+    font-size: 12px;
   }
+}
+
+/* O extrato orienta a hierarquia: texto sóbrio e valores comparáveis. */
+:root {
+  --text-secondary: #48534b;
+  font-variant-numeric: tabular-nums;
+}
+h1 { font-weight: 500; line-height: 1.2; }
+h2 { font-weight: 500; }
+strong, b { font-weight: 600; }
+.sidebar { padding: 24px 16px 0; }
+.brand { font-size: 24px; font-weight: 600; }
+.brand-symbol { width: 36px; height: 36px; border-radius: 8px; }
+.workspace-label { padding: 24px 12px 8px; color: var(--muted-foreground); }
+.sidebar nav { gap: 4px; }
+.sidebar nav a { min-height: 36px; padding: 8px 12px; gap: 8px; }
+.sidebar nav a.active { font-weight: 500; }
+.profile { margin-inline: -16px; padding: 16px; }
+.profile strong, .profile small { font-size: 12px; }
+.topbar { height: 64px; padding-inline: 32px; }
+.main-content { padding-inline: 32px; }
+.page-heading { margin-bottom: 32px; }
+.eyebrow { color: var(--muted-foreground); margin-bottom: 8px; }
+.month-picker { gap: 8px; padding: 4px 8px; }
+.month-picker a { min-width: 32px; text-align: center; }
+.month-picker span { text-transform: none; }
+.balance-metric .metric-label, .balance-metric .metric-foot { color: var(--muted-foreground); }
+.balance-metric .metric-value { color: var(--primary); }
+.metric { padding: 24px; min-width: 0; box-shadow: none; }
+.metric-value { font-weight: 500; overflow-wrap: anywhere; }
+.metric-foot { line-height: 1.5; color: var(--muted-foreground); }
+.panel-heading { padding: 24px; }
+.text-link { color: var(--primary); font-weight: 500; }
+.primary-button, .secondary-button { min-height: 40px; padding: 8px 16px; gap: 8px; font-size: 14px; }
+.primary-button { background: var(--primary); }
+.secondary-button { border-color: var(--border); }
+.connection-banner { background: var(--muted); color: var(--text-secondary); border-color: var(--border); }
+.field-select, .form-label input, .form-label select { min-height: 40px; }
+.search-field:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+.bank-logo, .goal-icon, .transaction-icon { background: var(--muted); color: var(--muted-foreground); }
+.auth-card { border-radius: 16px; }
+.auth-card .brand { padding: 0; }
+.auth-card h1 { font-size: 28px; }
+.auth-card p { font-size: 14px; color: var(--text-secondary); }
+.auth-card label, .auth-card input { font-size: 14px; }
+.auth-card input { min-height: 44px; border-color: var(--input); }
+.auth-card .text-link { font-size: 13px; }
+footer { font-size: 12px; border-top: 1px solid var(--border); margin-top: 32px; }
+button, a { transition: color 160ms ease-out, background-color 160ms ease-out, border-color 160ms ease-out; }
+@media (min-width: 851px) {
+  .sidebar { width: 256px; }
+  main { margin-left: 256px; }
+}
+@media (min-width: 601px) and (max-width: 850px) {
+  .sidebar { padding: 24px 8px 0; }
+  .sidebar .brand { font-size: 0; }
+  .sidebar nav a { padding: 12px; }
+}
+@media (max-width: 600px) {
+  .sidebar { padding: 0; height: 72px; }
+  .main-content { padding: 24px 16px 96px; }
+  .topbar { padding-inline: 16px; }
+  .page-heading { flex-wrap: wrap; gap: 16px; }
+  .month-picker { margin-top: 0; }
+  .metric { padding: 16px; min-height: 144px; }
+  .metric-label, .metric-foot { font-size: 12px; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .metric-value { font-size: clamp(18px, 5vw, 24px); }
+  .panel-heading { padding: 20px 16px; flex-wrap: wrap; }
+  .auth-card { padding: 24px; }
+  .auth-card .brand { font-size: 24px; }
+  footer { flex-wrap: wrap; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

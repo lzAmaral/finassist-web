@@ -125,7 +125,7 @@
 <div class="auth-page">
   <div class="auth-card">
     <a class="brand" href="/">finassist<span class="brand-dot">.</span></a>
-    <h1>Vamos começar.</h1>
+    <h1>Configurar acesso</h1>
     <p>
       Configure seu acesso e confirme o seu Telegram. As credenciais ficam na
       sua instalação.

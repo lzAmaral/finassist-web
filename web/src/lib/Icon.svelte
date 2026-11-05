@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { name, size = 20 }: { name: string; size?: number } = $props();
+  let { name, size = 18 }: { name: string; size?: number } = $props();
   const paths: Record<string, string> = {
     grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
     arrows: 'M3 7h17m-5-5 5 5-5 5M21 17H4m5-5-5 5 5 5',
@@ -26,7 +26,7 @@
   viewBox="0 0 24 24"
   fill="none"
   stroke="currentColor"
-  stroke-width="1.65"
+  stroke-width="1.5"
   stroke-linecap="round"
   stroke-linejoin="round"
   aria-hidden="true"><path d={paths[name] ?? paths.grid} /></svg

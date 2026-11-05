@@ -107,7 +107,7 @@
         class="brand-dot">.</span
       ></a
     >
-    <div class="workspace-label">SEU ESPAÇO FINANCEIRO</div>
+    <div class="workspace-label">Finanças pessoais</div>
     <nav aria-label="Menu principal">
       {#each nav as [path, label, icon]}<a
           href={`/${path}?month=${d.month}`}
@@ -138,13 +138,13 @@
     </div>
     <div class="sidebar-bottom">
       <div class="privacy-icon"><Icon name="check" size={16} /></div>
-      <strong>Mais controle. Mais tranquilidade.</strong>
+      <strong>Contas, gastos e planejamento</strong>
       <p>Um espaço para entender seu dinheiro e planejar o que vem a seguir.</p>
       <a
         class="source-link"
         href="https://github.com/lzAmaral/finassist-web"
         target="_blank"
-        rel="noreferrer">Código aberto, feito para evoluir ↗</a
+        rel="noreferrer">Código-fonte ↗</a
       >
     </div>
     <div class="profile">
@@ -193,22 +193,22 @@
     <div class="main-content" id="main-content" tabindex="-1">
       <div class="page-heading">
         <div>
-          <span class="eyebrow">UM OLHAR PARA O SEU DINHEIRO</span>
+          <span class="eyebrow">Resumo financeiro</span>
           <h1>{title}</h1>
           <p>
             {data.section === 'investimentos'
-              ? 'Seu patrimônio, com uma visão de conjunto.'
+              ? 'Posições, rendimentos e distribuição da carteira'
               : data.section === 'analise'
-                ? 'Transforme movimentações em decisões mais conscientes.'
+                ? 'Categorias, variações e concentração dos gastos'
                 : data.section === 'transacoes'
-                  ? 'Cada movimento, no seu lugar.'
+                  ? 'Entradas e saídas registradas no período'
                   : data.section === 'metas'
-                    ? 'Pequenos passos para os seus próximos planos.'
+                    ? 'Objetivos, valores reservados e prazos'
                     : data.section === 'conexoes'
-                      ? 'Suas contas, reunidas em um só lugar.'
+                      ? 'Saldos por banco e conexões disponíveis'
                       : data.section === 'orcamento'
-                        ? 'Entenda o que é fixo e o que varia no seu mês.'
-                        : 'Seu mês com mais clareza, do saldo aos próximos planos.'}
+                        ? 'Despesas fixas, variáveis e limites do mês'
+                        : 'Saldos, movimentações e compromissos do mês'}
           </p>
         </div>
         <div class="month-picker">
@@ -283,31 +283,24 @@
                 ? 'Aguardando suas contas'
                 : `${d.balances.institutions.length} contas conectadas`}
             </div>
-            <span class="balance-decoration" aria-hidden="true">↗</span>
           </article>
           <article class="metric">
             <div class="metric-label">
-              Entradas do mês <span class="metric-icon green"
-                ><Icon name="down" size={17} /></span
-              >
+              Entradas do mês
             </div>
             <div class="metric-value">{display(d.summary.current.income)}</div>
             <div class="metric-foot">Tudo o que entrou neste mês</div>
           </article>
           <article class="metric">
             <div class="metric-label">
-              Saídas do mês <span class="metric-icon peach"
-                ><Icon name="up" size={17} /></span
-              >
+              Saídas do mês
             </div>
             <div class="metric-value">{display(d.summary.current.expense)}</div>
             <div class="metric-foot">Despesas registradas no período</div>
           </article>
           <article class="metric">
             <div class="metric-label">
-              Sobra do mês <span class="metric-icon pale"
-                ><Icon name="wallet" size={17} /></span
-              >
+              Sobra do mês
             </div>
             <div class="metric-value">{display(available)}</div>
             <div class="metric-foot">Entradas menos saídas</div>
@@ -461,10 +454,10 @@
                 contas.
               </p>
             {:else}
-              {#each d.balances.institutions as bank, i}<div class="bank-row">
+              {#each d.balances.institutions as bank}<div class="bank-row">
                   <span
                     class="bank-logo"
-                    style={`background:${i % 2 ? '#ece7f2' : '#e3eee5'};color:${i % 2 ? '#79638d' : '#56866d'}`}
+                    style="background:var(--muted);color:var(--muted-foreground)"
                     ><Icon name="bank" size={25} /></span
                   >
                   <div>
@@ -484,7 +477,7 @@
           </section>
           <section class="panel connect-guide" id="connection-guide">
             <span class="goal-icon"><Icon name="link" size={26} /></span>
-            <h2>Seus bancos, mais perto.</h2>
+            <h2>Conectar contas bancárias</h2>
             <p>
               O FinAssist lê seus dados pelo Meu Pluggy. A autorização acontece
               no banco e as credenciais de integração ficam no backend.
@@ -538,10 +531,9 @@
         </div>{/if}
       <footer>
         <span
-          >finassist. <span class="footer-divider">/</span> Mais clareza para o que
-          importa.</span
+          >finassist. <span class="footer-divider">/</span> Finanças pessoais</span
         ><span
-          >Feito para evoluir com você <span class="green-text">✳</span></span
+          >Contas · Gastos · Planejamento</span
         >
       </footer>
     </div>

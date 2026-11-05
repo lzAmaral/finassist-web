@@ -6,9 +6,9 @@
 .bal-money { font-variant-numeric: tabular-nums; }
 .bal-muted { color: var(--text-muted); }
 
-.bal-hero { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface) 60%); border: 1px solid var(--border); border-radius: 20px; padding: 24px; }
-.bal-hero-label { color: var(--text-secondary); font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
-.bal-hero-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 750; letter-spacing: -0.02em; line-height: 1.15; margin: 2px 0; }
+.bal-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; }
+.bal-hero-label { color: var(--text-secondary); font-size: 0.8125rem; letter-spacing: 0; text-transform: none; font-weight: 600; }
+.bal-hero-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; margin: 2px 0; }
 .bal-share { display: flex; gap: 2px; height: 18px; margin: 14px 0 10px; }
 .bal-share span { display: block; height: 100%; min-width: 6px; border-radius: 4px; }
 .bal-legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 0; list-style: none; }
@@ -17,7 +17,7 @@
 .bal-flag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; font-weight: 600; }
 .bal-flag-critical { color: var(--bad); }
 
-.bal-mark { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px; font-weight: 800; overflow: hidden; }
+.bal-mark { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px; font-weight: 500; overflow: hidden; }
 .bal-mark-sm { width: 26px; height: 26px; border-radius: 8px; font-size: 0.8rem; }
 .bal-mark-logo { background: #fff; border: 1px solid var(--border); }
 .bal-mark img { width: 100%; height: 100%; object-fit: contain; padding: 15%; }
@@ -27,12 +27,12 @@
 .bal-bank::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--brand-ui); }
 .bal-bank-head { display: flex; align-items: center; gap: 12px; }
 .bal-bank-id { display: flex; flex-direction: column; min-width: 0; }
-.bal-bank-name { font-size: 1.0625rem; font-weight: 700; overflow-wrap: anywhere; }
+.bal-bank-name { font-size: 1.0625rem; font-weight: 500; overflow-wrap: anywhere; }
 .bal-fresh { font-size: 0.8125rem; color: var(--text-muted); }
 .bal-fresh-stale { display: inline-flex; align-items: center; gap: 4px; color: var(--text-primary); font-weight: 600; }
 .bal-fresh-stale svg { color: var(--warning); }
 .bal-acc-label { margin-top: 14px; color: var(--text-secondary); font-size: 0.8125rem; }
-.bal-balance { font-size: 2rem; font-weight: 750; letter-spacing: -0.01em; line-height: 1.2; }
+.bal-balance { font-size: 2rem; font-weight: 500; letter-spacing: -0.01em; line-height: 1.2; }
 .bal-nocard { margin-top: auto; padding-top: 14px; }
 .bal-cards { display: grid; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
 
@@ -41,7 +41,7 @@
 .bal-card.is-light { background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 70%, #fff)); }
 .bal-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.875rem; }
 .bal-card-top svg { vertical-align: -3px; }
-.bal-card-invoice { font-size: 1.75rem; line-height: 1.2; font-weight: 750; margin-top: 4px; }
+.bal-card-invoice { font-size: 1.75rem; line-height: 1.2; font-weight: 500; margin-top: 4px; }
 .bal-card-sub { font-size: 0.8125rem; opacity: 0.92; }
 .bal-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; background: rgba(255, 255, 255, 0.22); }
 .bal-card.is-light .bal-pill { background: rgba(0, 0, 0, 0.14); }
@@ -50,7 +50,7 @@
 .bal-card.is-light .bal-meter { background: rgba(0, 0, 0, 0.18); }
 .bal-meter i { display: block; height: 100%; border-radius: 5px; background: var(--on-brand); }
 .bal-card-row { display: flex; justify-content: space-between; gap: 4px 8px; flex-wrap: wrap; font-size: 0.8125rem; }
-.bal-card-flag { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.bal-card-flag { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
 
 .bal-table { margin-top: 16px; }
 .bal-table summary { cursor: pointer; color: var(--text-secondary); min-height: 24px; }

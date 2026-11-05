@@ -311,14 +311,14 @@ table.tx td { vertical-align: top; }
 
 /* Menu lateral (gaveta em telas estreitas) */
 .app { min-height: 100vh; }
-.brand { font-weight: 700; font-size: 1.0625rem; }
+.brand { font-weight: 500; font-size: 1.0625rem; }
 .sidebar { display: flex; flex-direction: column; gap: 8px; width: 244px; padding: 16px 12px; background: var(--surface); border-right: 1px solid var(--border);
   position: fixed; inset: 0 auto 0 0; overflow-y: auto; z-index: 30; transform: translateX(-100%); transition: transform 0.18s ease; }
 .sidebar.is-open { transform: none; box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25); }
 .side-brand { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px 12px; }
 .side-nav { display: flex; flex-direction: column; gap: 14px; flex: 1; }
 .side-section { display: flex; flex-direction: column; gap: 2px; }
-.side-title { margin: 0 10px 4px; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.side-title { margin: 0 10px 4px; font-size: 0.75rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-muted); }
 .side-link { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
   color: var(--text-secondary); font-size: 0.9375rem; }
 .side-link:hover { background: var(--page); color: var(--text-primary); }
@@ -349,3 +349,15 @@ table.tx td { vertical-align: top; }
 .sync-spin { animation: sync-spin 1s linear infinite; }
 @keyframes sync-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .sync-spin { animation: none; } }
+
+/* Valores e categorias têm a mesma hierarquia em todas as telas. */
+body { font-variant-numeric: tabular-nums; }
+.side-nav { gap: 24px; }
+.side-link { min-height: 36px; gap: 8px; padding: 8px 12px; }
+.side-link[aria-current='page'] { background: var(--page); box-shadow: inset 2px 0 var(--accent); font-weight: 500; }
+.chip { color: var(--text-secondary); background: var(--page); }
+.group-card { border-left: 1px solid var(--border); }
+.group-head:hover { background: var(--page); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

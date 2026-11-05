@@ -8,10 +8,6 @@
   } from '#lib/portfolio-presentation.js';
   import { money } from '#lib/finance.js';
   import {
-    Wallet,
-    TrendingUp,
-    Coins,
-    ChartNoAxesCombined,
     ArrowUpRight,
     ArrowDownRight,
     CalendarDays
@@ -67,7 +63,6 @@
 <section class="investment-stats" aria-label="Resumo da carteira">
   <article class="investment-stat">
     <div class="investment-stat-label">
-      <span class="investment-stat-icon"><Wallet size={20} /></span>
       <h2>Patrimônio total</h2>
     </div>
     <strong class="investment-stat-value">{display(summary.total)}</strong>
@@ -79,7 +74,6 @@
   </article>
   <article class="investment-stat">
     <div class="investment-stat-label">
-      <span class="investment-stat-icon"><TrendingUp size={20} /></span>
       <h2>Ganho de capital</h2>
     </div>
     <strong
@@ -96,7 +90,6 @@
   </article>
   <article class="investment-stat">
     <div class="investment-stat-label">
-      <span class="investment-stat-icon"><Coins size={20} /></span>
       <h2>Proventos recebidos (12M)</h2>
     </div>
     <strong class="investment-stat-value">{display(trailingDividends)}</strong>
@@ -108,8 +101,6 @@
   </article>
   <article class="investment-stat">
     <div class="investment-stat-label">
-      <span class="investment-stat-icon"><ChartNoAxesCombined size={20} /></span
-      >
       <h2>Variação sobre o custo</h2>
     </div>
     <div class="investment-stat-value">
@@ -162,18 +153,13 @@
         <FinanceChart
           rows={history}
           series={[
-            { key: 'total', label: 'Proventos recebidos', color: '#2cba7c' }
+            { key: 'total', label: 'Proventos recebidos', color: '#286147' }
           ]}
           {hidden}
           label="Proventos recebidos por mês"
         />
       {:else}
         <div class="investment-chart-empty">
-          <div class="investment-empty-bars" aria-hidden="true">
-            {#each [28, 44, 35, 62, 49, 80, 65, 96] as height}<span
-                style={`height:${height}px`}
-              ></span>{/each}
-          </div>
           <strong>Seus rendimentos, mês a mês</strong>
           <p>Nenhum provento registrado neste período.</p>
         </div>
@@ -229,7 +215,6 @@
         </ul>
       {:else}
         <div class="investment-chart-empty">
-          <div class="investment-empty-donut" aria-hidden="true"></div>
           <strong>Sua carteira começa aqui</strong>
           <p>Adicione um investimento para ver a distribuição.</p>
         </div>

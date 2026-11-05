@@ -46,11 +46,11 @@
 <div class="auth-page">
   <div class="auth-card">
     <a class="brand" href="/">finassist<span class="brand-dot">.</span></a>
-    <h1>Seu espaço, de volta.</h1>
+    <h1>Entrar no FinAssist</h1>
     <p>
       {step === 'code'
         ? 'Digite o código enviado pelo FinAssist ao seu chat.'
-        : 'Entre para acompanhar seu dinheiro com mais clareza.'}
+        : 'Consulte suas contas, despesas e metas'}
     </p>
     {#if data.configured}<form onsubmit={submit}>
         {#if step === 'password'}<label for="password">Sua senha</label><input
@@ -69,7 +69,7 @@
           />{/if}{#if message}<p class="error" role="alert">
             {message}
           </p>{/if}<button class="primary-button" disabled={busy}
-          >{busy ? 'Conectando...' : 'Entrar no meu espaço →'}</button
+          >{busy ? 'Conectando...' : 'Entrar'}</button
         >
       </form>
       {#if !data.cloud}<a class="text-link" href="/setup"

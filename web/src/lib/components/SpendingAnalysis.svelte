@@ -3,7 +3,6 @@
   import { money } from '#lib/finance.js';
   import { localAnalysis, type GeminiAnalysis } from '#lib/analysis.js';
   import {
-    Sparkles,
     ArrowUpRight,
     ShieldCheck,
     KeyRound,
@@ -189,7 +188,7 @@
   ><Card.Header class="flex flex-row items-start justify-between gap-3"
     ><div>
       <Card.Title class="flex items-center gap-2"
-        ><Sparkles class="size-4 text-primary" />Uma segunda leitura com Gemini</Card.Title
+        >Uma segunda leitura com Gemini</Card.Title
       ><Card.Description class="mt-1.5"
         >Ideias para compreender os seus hábitos, a partir de indicadores
         resumidos.</Card.Description
@@ -254,7 +253,7 @@
       <Button
         disabled={busy || !configured || d.transactions.total === 0}
         onclick={() => action('generate', { month: d.month })}
-        ><Sparkles class="size-4" />{busy
+        >{busy
           ? 'Preparando…'
           : analysis
             ? 'Atualizar leitura'

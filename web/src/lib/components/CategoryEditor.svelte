@@ -284,7 +284,7 @@
     flex-wrap: wrap;
   }
   .actions button:first-child {
-    background: #6155ca;
+    background: var(--primary);
     color: white;
   }
   .hint,
@@ -296,7 +296,7 @@
   .preview {
     padding: 0.75rem;
     border-radius: 0.4rem;
-    background: #f0effb;
+    background: var(--muted);
   }
   .preview ul {
     max-height: 12rem;
